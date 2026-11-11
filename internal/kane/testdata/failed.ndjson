@@ -1,0 +1,15 @@
+{"type":"stream_start","cli_version":"0.9.4","surface":"run","pid":1,"v":1,"ts":"2026-11-11T10:00:00Z"}
+progress: starting browser
+{"step":1,"status":"running","remark":"Navigate to http://localhost:4000"}
+{"step":1,"status":"done","remark":"Navigated"}
+{"step":2,"status":"running","remark":"Add Masala Chai","child_id":"c1"}
+{"type":"child_agent_start","child_id":"c1"}
+{"step":2,"status":"done","remark":"Added Masala Chai","child_id":"c1"}
+{"type":"child_agent_end","child_id":"c1"}
+{"step":2,"status":"running","remark":"Remove Masala Chai"}
+{"step":2,"status":"done","remark":"Removed Masala Chai"}
+{"type":"warning","message":"slow page"}
+{"type":"some_future_event","foo":1}
+{"step":7,"status":"running","remark":"Verify the order total shows ₹249"}
+{"step":7,"status":"failed","remark":"The total shows ₹498"}
+{"type":"run_end","status":"failed","summary":"The total still shows ₹498 after the item is removed.","one_liner":"Stale total","reason":"assertion_failed: @ step 7","duration":45.2,"credits_consumed":11.9,"final_state":{"observed":"₹498"},"session_dir":"/nonexistent","test_url":"","result_code":"740","verdict":{"confirmed":true,"family":"state","category":"stale_ui","severity":"high","one_liner":"Total not recomputed","confidence":0.92}}

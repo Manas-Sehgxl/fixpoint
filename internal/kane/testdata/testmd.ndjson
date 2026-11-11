@@ -1,0 +1,8 @@
+{"type":"stream_start","cli_version":"0.10.0","surface":"testmd","pid":10,"v":1,"ts":"2026-11-11T10:00:00Z"}
+{"type":"test_md_step_start","step_index":0,"heading":"Remove an item and check the total"}
+{"step":1,"status":"running","remark":"Navigate"}
+{"step":1,"status":"done","remark":"Navigated"}
+{"type":"run_end","status":"passed","summary":"Total shows ₹249.","reason":"","duration":12.0,"credits":2.5,"final_state":{"observed":"₹249"}}
+{"type":"test_md_step_end","step_index":0,"status":"passed"}
+{"type":"test_md_summary","overall_status":"passed","duration_s":13.1,"steps":{"total":1,"passed":1,"failed":0,"skipped":0,"replay_decisions":4,"author_decisions":0}}
+{"type":"test_md_done","overall_status":"passed","duration_s":13.4,"session_id":"s1","share_url":"https://example.test/share/1"}

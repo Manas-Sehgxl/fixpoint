@@ -1,0 +1,10 @@
+{"type":"stream_start","cli_version":"0.10.0","surface":"run","pid":4242,"v":1,"ts":"2026-11-11T10:00:00Z"}
+{"type":"project_folder_auto_defaulted","folder":"/tmp/x"}
+{"step":1,"status":"running","remark":"Navigate to http://localhost:4000"}
+{"step":1,"status":"done","remark":"Navigated to http://localhost:4000"}
+{"step":2,"status":"running","remark":"Click the \"Add to cart\" button on the \"Masala Chai\" card"}
+{"step":2,"status":"done","remark":"Clicked \"Add to cart\""}
+{"type":"coverage","pages":3}
+{"step":3,"status":"running","remark":"Verify the cart shows 1 item"}
+{"step":3,"status":"done","remark":"The cart shows 1 item"}
+{"type":"run_end","status":"passed","summary":"The cart shows one Masala Chai.","one_liner":"Cart works","reason":"","duration":21.5,"credits_consumed":6.2,"final_state":{"observed":"1 item"},"session_dir":"~/.testmuai/kaneai/sessions/abc","test_url":"https://example.test/run/1"}
