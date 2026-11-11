@@ -43,8 +43,10 @@ func (w *Worker) processReport(ctx context.Context, j job) {
 		if w.restoreBaseline(ctx, j.id) {
 			w.dropSnapshots(j.id)
 		}
-		if len(r.Runs) > 0 || r.Check != nil {
-			w.update(j.id, resetWork)
+		if r.Check != nil || r.Problem != nil {
+			// Start triage from a clean slate, but keep the runs and
+			// attempts already in the case file.
+			w.update(j.id, requeueWithThread)
 		}
 	}
 	for st != stDone && ctx.Err() == nil {

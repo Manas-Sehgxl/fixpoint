@@ -196,6 +196,14 @@ func (h *harness) app() string {
 	return string(b)
 }
 
+func runKinds(r core.Report) []string {
+	var out []string
+	for _, run := range r.Runs {
+		out = append(out, string(run.Kind)+"/"+string(run.Status))
+	}
+	return out
+}
+
 func eventTypes(st *store.Store, id string) []string {
 	d, _ := st.Detail(id)
 	var out []string
@@ -316,6 +324,10 @@ func TestNotReproducedAskReplyRequeue(t *testing.T) {
 	r = h.wait(id, core.StatusProven)
 	if len(r.Thread) != 2 || r.Thread[1].From != "reporter" {
 		t.Errorf("thread %+v", r.Thread)
+	}
+	// The run that could not reproduce it stays in the case file.
+	if len(r.Runs) != 3 || r.Runs[0].Status != core.RunPassed || r.Runs[0].Kind != core.RunReproduce {
+		t.Errorf("runs after the reply: %+v", runKinds(r))
 	}
 	if err := h.w.Reply(id, "again"); err == nil {
 		t.Error("a reply to a proven report was accepted")

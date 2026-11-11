@@ -218,6 +218,14 @@ func resetWork(r *core.Report) {
 	r.Runs, r.Attempts = []core.Run{}, []core.Attempt{}
 }
 
+// requeueWithThread starts the report again after a reply, keeping the runs
+// already in the case file: the reporter's answer is new information, not a
+// reason to forget what Kane saw.
+func requeueWithThread(r *core.Report) {
+	r.Status = core.StatusQueued
+	r.Check, r.Proof, r.Problem, r.ClosedAt = nil, nil, nil, nil
+}
+
 // Retry queues a report again from the start.
 func (w *Worker) Retry(id string) error {
 	_, err := w.o.Store.Update(id, func(r *core.Report) error {
@@ -265,7 +273,7 @@ func (w *Worker) Reply(id, text string) error {
 			return &Conflict{"This report is not waiting for an answer."}
 		}
 		r.Thread = append(r.Thread, core.Message{From: "reporter", Text: text, At: time.Now().UTC()})
-		resetWork(r)
+		requeueWithThread(r)
 		return nil
 	})
 	if err != nil {
