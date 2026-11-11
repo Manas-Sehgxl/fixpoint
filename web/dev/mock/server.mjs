@@ -147,8 +147,7 @@ class World {
     const base = this.reportAt(inst, Date.now());
     delete base.track;
     delete base.public;
-    const start = Date.now() + 300;
-    this.instance(inst.f, start, phases, base, { ...extra, live: true });
+    this.instance(inst.f, Date.now(), phases, base, { ...extra, live: true });
     this.schedule(inst);
   }
 

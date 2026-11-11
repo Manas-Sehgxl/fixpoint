@@ -43,7 +43,10 @@ export function systemLine(sys) {
   const ok = (tool) => `${tool.name} ${tool.version ? tool.version + ' ' : ''}${tool.signed_in === 'yes' ? 'is signed in' : 'is ready'}`;
   const parts = [];
   if (t.reachable) parts.push(h('span', { class: 'sys-item' }, mark('done'), `Watching ${t.name} at `, h('a', { href: t.url, target: '_blank', rel: 'noopener noreferrer' }, t.url.replace(/^https?:\/\//, '')), '.'));
-  for (const tool of [sys.kane, sys.agent]) if (!tool.problem) parts.push(h('span', { class: 'sys-item' }, mark('done'), `${ok(tool)}${tool.stub ? ' (simulated)' : ''}.`));
+  for (const tool of [sys.kane, sys.agent]) {
+    if (tool.problem) continue;
+    parts.push(h('span', { class: 'sys-item' }, mark(tool.stub ? 'waiting' : 'done'), tool.stub ? `${tool.name} is simulated by ${tool.version || 'a stub'}.` : `${ok(tool)}.`));
+  }
   const line = h('p', { class: 'sysline' }, parts);
   if (!problems.length) return line;
   return h('div', null, line, h('div', { class: 'sys-problems', role: 'alert' }, problems.map((p) => h('p', { class: 'sys-problem' }, mark('failed'),

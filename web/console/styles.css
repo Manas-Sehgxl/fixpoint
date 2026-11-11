@@ -154,6 +154,7 @@ pre.code { display: block; background: var(--white); border: 1px solid var(--gri
 .facts dt { font-size: var(--t13); color: var(--soft); }
 .facts dd { font-variant-numeric: tabular-nums lining-nums; }
 .facts-inline { display: flex; flex-wrap: wrap; gap: 10px 32px; margin-top: 14px; }
+.facts-table { gap: 0; }
 .facts-table > div { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 16px; padding: 10px 0; border-top: 1px solid var(--grid); }
 .facts-table > div:last-child { border-bottom: 1px solid var(--grid); }
 .facts-table dt { font-size: var(--t15); color: var(--soft); }
@@ -227,6 +228,7 @@ details.more[open] > summary { margin-bottom: 8px; }
 .snippet { margin-top: 12px; display: grid; gap: 10px; justify-items: start; }
 .snippet pre { width: 100%; }
 .empty-short { max-width: 60ch; padding: 24px 0; border-top: 1px solid var(--rule); }
+.empty-short:empty { display: none; }
 .empty-short p + p { margin-top: 12px; }
 
 /* Case file */
@@ -452,7 +454,7 @@ details.diff[open] > summary { border-bottom: 1px solid var(--grid); }
 .test-mark { padding-top: 7px; }
 .test-title { font: 400 var(--t21)/1.25 var(--serif); }
 .test-from { margin-top: 4px; color: var(--soft); }
-.test-result { display: grid; gap: 2px; justify-items: end; text-align: right; padding-top: 4px; }
+.test-result { display: grid; align-content: start; gap: 2px; justify-items: end; text-align: right; padding-top: 4px; }
 .test-words { font-variant-numeric: tabular-nums; }
 .test-reason { color: var(--fail); font-size: var(--t13); }
 .test.is-active .test-words { color: var(--blue); font-weight: 600; }
@@ -466,7 +468,7 @@ details.diff[open] > summary { border-bottom: 1px solid var(--grid); }
 .tool.is-bad .tool-state { font-weight: 600; }
 .remedy { margin-top: 10px; border-left: 3px solid var(--fail); padding-left: 12px; max-width: 46ch; }
 .tool .facts-inline { flex-direction: column; gap: 8px; }
-.tool code { white-space: normal; word-break: break-all; }
+.tool dd code { white-space: normal; word-break: break-all; }
 .widget h2, .settings h2, .reset h2 { font: 400 var(--t27)/1.2 var(--serif); margin-bottom: 10px; }
 .widget, .settings, .reset { max-width: 820px; }
 .widget > p, .reset > p { max-width: 68ch; }

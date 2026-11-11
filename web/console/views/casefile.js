@@ -289,8 +289,9 @@ export function mount(root, ctx, { id }) {
   const viewCtx = {
     ui, diffState,
     liveSteps: (runId) => ctx.store.live.get(runId),
-    act: (btn, fn, ok) => ctx.act(btn, fn, ok, () => ctx.refresh.report(id)),
+    act: (btn, fn, ok) => ctx.act(btn, fn, ok, () => { lastMsg = { text: ok, at: Date.now() }; ctx.refresh.report(id); }),
   };
+  let lastMsg = null;
   const heading = h('h1', { tabindex: '-1', class: 'case-title' });
   const statusEl = h('p', { class: 'case-status', 'aria-live': 'polite' });
   const factsEl = h('dl', { class: 'facts case-facts' });
@@ -306,6 +307,7 @@ export function mount(root, ctx, { id }) {
   root.append(msg, page);
   page.hidden = true;
   let lastStatus = null;
+  let wantFocus = false;
   let actionsSig = '';
   let loadingTimer = setTimeout(() => {
     if (!ctx.store.details.has(id)) msg.replaceChildren(h('p', { class: 'loading' }, 'Loading the case file.'));
@@ -335,7 +337,7 @@ export function mount(root, ctx, { id }) {
     }
     const parts = [h('div', { class: 'action-buttons' }, list)];
     if (r.status === 'needs_info') parts.unshift(replyForm(r));
-    parts.push(h('p', { class: 'action-msg', role: 'status' }));
+    parts.push(h('p', { class: 'action-msg', role: 'status' }, lastMsg && Date.now() - lastMsg.at < 8000 ? lastMsg.text : ''));
     actions.replaceChildren(h('h2', { class: 'side-h' }, 'Actions'), ...parts);
   }
 
@@ -413,9 +415,10 @@ export function mount(root, ctx, { id }) {
         heading.textContent = '';
         msg.replaceChildren(
           h('h1', { tabindex: '-1', class: 'msg-title' }, err.status === 404 ? 'There is no report at this address' : 'This report could not be loaded'),
-          h('p', null, rich(err.status === 404 ? `${err.message} Check the link, or find it on the board.` : err.message)),
+          h('p', null, err.status === 404 ? 'Check the link, or find the report on the board. Resetting the demo removes every report.' : rich(err.message)),
           h('p', { class: 'inline-actions' }, h('a', { class: 'btn', href: '/' }, 'Back to all reports'),
             err.status !== 404 ? Object.assign(h('button', { type: 'button', class: 'btn' }, 'Try again'), { onclick: () => ctx.refresh.report(id) }) : null));
+        if (wantFocus) { wantFocus = false; msg.querySelector('h1').focus({ preventScroll: true }); }
       }
       return;
     }
@@ -424,6 +427,7 @@ export function mount(root, ctx, { id }) {
     page.hidden = false;
     const r = d.report;
     renderHead(r);
+    if (wantFocus) { wantFocus = false; heading.focus({ preventScroll: true }); }
     plot.update(r);
     renderActions(r);
     const items = plan(r, d.events || []);
@@ -452,7 +456,11 @@ export function mount(root, ctx, { id }) {
   }
 
   return {
-    heading: () => (page.hidden ? msg.querySelector('h1') || heading : heading),
+    heading: () => {
+      if (!page.hidden) return heading;
+      wantFocus = true;
+      return msg.querySelector('h1');
+    },
     title: 'Report | Fixpoint',
     update,
     onStep,

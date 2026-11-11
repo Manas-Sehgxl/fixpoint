@@ -8,10 +8,10 @@ import { duration, ago } from '../format.js';
 const RESULT = { passed: 'Passed', failed: 'Failed', error: 'Could not run', timeout: 'Timed out', running: 'Running' };
 
 function testRow(t, live) {
-  const now = live.get(t.id);
+  const now = live.get(t.id) === 'running';
   const lr = t.last_run;
   let state = 'pending', words = 'Not run since it was added';
-  if (now === 'running') { state = 'active'; words = 'Running now'; }
+  if (now) { state = 'active'; words = 'Running now'; }
   else if (lr) {
     state = lr.status === 'passed' ? 'passed' : lr.status === 'running' ? 'active' : 'failed';
     words = `${RESULT[lr.status] || lr.status} `;
@@ -24,7 +24,7 @@ function testRow(t, live) {
         t.test_file ? ' Saved as a replayable Kane test.' : ''),
       h('details', { class: 'more' }, h('summary', null, 'Show the check'), h('pre', { class: 'code check-text' }, t.objective))),
     h('p', { class: 'test-result' },
-      h('span', { class: 'test-words' }, now === 'running' ? 'Running now' : lr ? `${RESULT[lr.status] || lr.status} ` : words,
+      h('span', { class: 'test-words' }, now ? 'Running now' : lr ? `${RESULT[lr.status] || lr.status} ` : words,
         !now && lr ? h('time', { datetime: lr.at, dataset: { ago: lr.at } }, ago(lr.at)) : null),
       !now && lr ? h('span', { class: 'quiet' }, `${duration(lr.duration_s)}, ${lr.replayed ? 'replayed from its recording' : 'run fresh by Kane'}`) : null,
       !now && lr && lr.reason && lr.status !== 'passed' ? h('span', { class: 'test-reason' }, lr.reason) : null));

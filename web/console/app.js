@@ -141,10 +141,12 @@ function renderChrome() {
     return;
   }
   const bad = [!s.target.reachable && `${s.target.name || 'The app'} is not answering`, s.kane.problem && `${s.kane.name} needs attention`, s.agent.problem && `${s.agent.name} needs attention`].filter(Boolean);
+  const long = bad.length ? bad[0] : s.simulated ? 'Simulated runners' : `${s.target.name}, ${s.kane.name} and ${s.agent.name} are ready`;
+  const short = bad.length ? 'Needs attention' : s.simulated ? 'Simulated' : 'Ready';
   sysState.append(h('a', { href: '/setup', class: bad.length ? 'sys-link is-bad' : 'sys-link' },
-    mark(bad.length ? 'failed' : 'done'),
-    h('span', { class: 'sys-long' }, bad.length ? bad[0] : `${s.target.name}, Kane CLI and ${s.agent.name} are ready`),
-    h('span', { class: 'sys-short' }, bad.length ? 'Needs attention' : 'Ready')));
+    mark(bad.length ? 'failed' : s.simulated ? 'waiting' : 'done'),
+    h('span', { class: 'sys-long' }, long),
+    h('span', { class: 'sys-short' }, short)));
   if (s.simulated) {
     notices.append(h('div', { class: 'simulated', role: 'note' }, h('div', { class: 'wrap' }, mark('waiting'),
       h('p', null, h('strong', null, 'Simulated runners are on. '), 'No browser is being driven and nothing here is real verification. For development only.'))));
@@ -217,7 +219,7 @@ function route(first) {
   if (!first) {
     window.scrollTo(0, 0);
     const hd = view.heading();
-    if (hd) hd.focus({ preventScroll: true });
+    (hd || main).focus({ preventScroll: true });
   }
 }
 
