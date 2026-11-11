@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/Manas-Sehgxl/fixpoint/internal/stub"
 )
@@ -65,7 +64,6 @@ func main() {
 // fail prints an error the way the rest of the CLI does and returns the
 // exit code.
 func fail(err error) int {
-	msg := err.Error()
-	fmt.Fprintf(os.Stderr, "fixpoint: %s%s\n", strings.ToUpper(msg[:1]), msg[1:])
+	fmt.Fprintf(os.Stderr, "fixpoint: %s\n", err)
 	return 1
 }

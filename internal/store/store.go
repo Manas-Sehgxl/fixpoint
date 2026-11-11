@@ -119,6 +119,11 @@ func WriteFileAtomic(path string, data []byte) error {
 		os.Remove(tmp)
 		return err
 	}
+	// CreateTemp makes the file private; these are ordinary project files.
+	if err := os.Chmod(tmp, 0o644); err != nil {
+		os.Remove(tmp)
+		return err
+	}
 	if err := os.Rename(tmp, path); err != nil {
 		os.Remove(tmp)
 		return err

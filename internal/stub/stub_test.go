@@ -162,3 +162,14 @@ func TestTestMDRoundTrip(t *testing.T) {
 		t.Errorf("read back %q %q", obj, url)
 	}
 }
+
+func TestStubTriageSeesTheThread(t *testing.T) {
+	scs := LoadScenarios(mustWrite(t, scenariosJSON))
+	prompt := "FIXPOINT-TASK: triage\n\nlive app at http://localhost:4000.\n<report>\nbroken\n</report>\n" +
+		"Earlier questions and answers:\n- Fixpoint asked: What were you doing?\n- Reporter answered: I removed an item and the total stayed the same\n" +
+		"Notes about this app from its maintainer:\n(none)\n"
+	out := stubTriage(scs, prompt)
+	if out["decision"] != "check" || out["title"] != "Total stays the same after removing an item" {
+		t.Errorf("the reporter's answer should make the scenario match: %+v", out)
+	}
+}

@@ -113,18 +113,33 @@ func promptURL(prompt string) string {
 func stubTriage(scs Scenarios, prompt string) map[string]any {
 	report := reportText(prompt)
 	url := promptURL(prompt)
-	if sc := scs.MatchReport(report); sc != nil {
+	// Triage sees the thread, so a reporter's answer can be what makes a
+	// scenario match.
+	withThread := report + "\n" + between(prompt, "Earlier questions and answers:\n", "\nNotes about this app")
+	if sc := scs.MatchReport(withThread); sc != nil {
 		return map[string]any{"decision": "check", "title": sc.Title,
-			"objective": Resolve(sc.Objective, url), "expected": sc.Expected, "question": sc.Question}
+			"objective": withMarkers(Resolve(sc.Objective, url), withThread), "expected": sc.Expected, "question": sc.Question}
 	}
-	if len(strings.Fields(report)) < 5 {
+	if len(strings.Fields(withThread)) < 5 {
 		return map[string]any{"decision": "ask", "title": firstWords(report, 70),
 			"objective": "", "expected": "", "question": askQuestion}
 	}
 	return map[string]any{"decision": "check", "title": firstWords(report, 70),
-		"objective": fmt.Sprintf("Go to %s. Verify the page shows the menu.", strings.TrimRight(url, "/")),
+		"objective": withMarkers(fmt.Sprintf("Go to %s. Verify the page shows the menu.", strings.TrimRight(url, "/")), withThread),
 		"expected":  "The page loads and shows the menu.",
 		"question":  "Could you tell us the exact steps you took, and what you saw instead?"}
+}
+
+// withMarkers carries a [stub:error] or [stub:timeout] marker from the
+// report into the check, which is how the stub Kane is told to fail before
+// the run: the markers only reach it through the objective.
+func withMarkers(objective, report string) string {
+	for _, m := range []string{"[stub:error]", "[stub:timeout]"} {
+		if strings.Contains(report, m) && !strings.Contains(objective, m) {
+			objective += " " + m
+		}
+	}
+	return objective
 }
 
 func firstWords(s string, n int) string {
