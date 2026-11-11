@@ -1,0 +1,17 @@
+# Fixpoint's working data: reports, artifacts, the demo shop copy, Kane's files
+.fixpoint/
+
+# Build output
+/bin/
+/fixpoint
+/fixpoint.exe
+
+# Kane CLI run artifacts
+.testmuai/evidence/
+*.evidence
+
+# Local agent settings
+.claude/settings.local.json
+
+node_modules/
+.DS_Store
