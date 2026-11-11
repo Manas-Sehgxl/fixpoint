@@ -1,1 +1,33 @@
-<!doctype html><title>Fixpoint</title><p>Console placeholder.</p>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixpoint</title>
+<meta name="color-scheme" content="light">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/InstrumentSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/STIX2Text-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a id="brand" class="brand" href="/"><span class="brand-word">Fixpoint</span></a>
+    <nav id="nav" class="nav" aria-label="Sections">
+      <a href="/">Reports</a>
+      <a href="/suite">Suite</a>
+      <a href="/setup">Setup</a>
+    </nav>
+    <div id="sys-state" class="sys-state"></div>
+  </div>
+</header>
+<div id="notices"></div>
+<main id="main" tabindex="-1"></main>
+<div id="conn" class="conn" role="status" hidden></div>
+<div id="announcer" class="visually-hidden" aria-live="polite"></div>
+<noscript><p class="wrap">The Fixpoint console needs JavaScript. The public status pages work the same way.</p></noscript>
+</body>
+</html>
