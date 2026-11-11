@@ -146,6 +146,10 @@ func printStatus(ctx context.Context, a *app) {
 	if sys.Simulated {
 		fmt.Println("\n  Simulated runners are on: no browser is being driven and nothing here is")
 		fmt.Println("  real verification. Leave --stubs off to use Kane CLI and the coding agent.")
+		if a.scenarios == "" {
+			fmt.Println("  No scenarios file was found, so the simulated Kane cannot reproduce anything:")
+			fmt.Println("  run from the repository root, or set STUB_SCENARIOS to web/dev/scenarios.json.")
+		}
 	}
 	if a.cfg.Pipeline.Autonomy == "ask" {
 		fmt.Println("\n  Autonomy is \"ask\": each reproduced report waits for you to approve the fix.")

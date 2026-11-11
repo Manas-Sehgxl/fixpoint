@@ -65,6 +65,8 @@ type app struct {
 	kane    *kane.CLI
 	agent   agent.Agent
 	exclude []string
+	// scenarios is the stub scenarios file in use, empty when none was found.
+	scenarios string
 
 	healthMu  sync.Mutex
 	healthAt  time.Time
@@ -118,7 +120,8 @@ func setup(ctx context.Context, cfg config.Config, dataDir string, stubs, seed b
 	if err != nil {
 		self = os.Args[0]
 	}
-	scenarios := scenariosPath()
+	a.scenarios = scenariosPath()
+	scenarios := a.scenarios
 	kaneEnv := []string{}
 	if stubs {
 		kaneEnv = append(kaneEnv, "STUB_SCENARIOS="+scenarios, "STUB_TARGET_DIR="+a.target.Dir)
@@ -146,12 +149,22 @@ func setup(ctx context.Context, cfg config.Config, dataDir string, stubs, seed b
 }
 
 // scenariosPath finds the stub scenarios file: the environment wins, then
-// the repository's web/dev/scenarios.json beside the working directory.
+// web/dev/scenarios.json near the working directory or the binary.
 func scenariosPath() string {
 	if p := os.Getenv("STUB_SCENARIOS"); p != "" {
 		return p
 	}
-	for _, p := range []string{filepath.Join("web", "dev", "scenarios.json"), filepath.Join("..", "web", "dev", "scenarios.json")} {
+	candidates := []string{
+		filepath.Join("web", "dev", "scenarios.json"),
+		filepath.Join("..", "web", "dev", "scenarios.json"),
+	}
+	if self, err := os.Executable(); err == nil {
+		dir := filepath.Dir(self)
+		candidates = append(candidates,
+			filepath.Join(dir, "web", "dev", "scenarios.json"),
+			filepath.Join(dir, "..", "web", "dev", "scenarios.json"))
+	}
+	for _, p := range candidates {
 		if abs, err := filepath.Abs(p); err == nil {
 			if _, err := os.Stat(abs); err == nil {
 				return abs
