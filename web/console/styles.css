@@ -341,7 +341,7 @@ details.more[open] > summary { margin-bottom: 8px; }
 .run-title { margin-top: 28px !important; }
 .run-headline { display: flex; gap: 10px; align-items: baseline; font-size: var(--t17); max-width: 68ch; }
 .run-headline .mark { align-self: flex-start; margin-top: 4px; }
-.run-error { margin-top: 10px; border-left: 3px solid var(--fail); padding-left: 14px; }
+.run-problem { margin-top: 10px; border-left: 3px solid var(--fail); padding-left: 14px; }
 .steps { margin-top: 14px; counter-reset: s; }
 .step { display: grid; grid-template-columns: 16px 2.2em 1fr; gap: 0 8px; align-items: baseline; padding: 5px 0; }
 .step .mark { align-self: center; }
@@ -531,8 +531,7 @@ details.diff[open] > summary { border-bottom: 1px solid var(--grid); }
   .rows td { display: block; padding: 0; border: 0; }
   .rows .c-num { position: absolute; left: 0; top: 14px; width: auto; padding: 0; }
   .rows .c-title { flex: 0 0 100%; max-width: 100%; width: auto; margin-bottom: 4px; }
-  .rows td.c-status { display: inline-flex; align-items: center; }
-  .rows .c-track { display: block !important; }
+  .rows td.c-status { display: flex; align-items: center; flex: 0 0 100%; }
   .rows .c-att, .rows .c-ttp, .rows .c-age { text-align: left; font-size: var(--t13); color: var(--soft); }
   .rows .c-att:has(.visually-hidden:only-child), .rows .c-ttp:has(.visually-hidden:only-child) { display: none; }
   .m-label { display: inline; }
@@ -557,7 +556,15 @@ details.diff[open] > summary { border-bottom: 1px solid var(--grid); }
   .reg-title { grid-column: 2; }
 }
 
+@media (max-width: 440px) {
+  .sys-short { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .nav { gap: 14px; }
+  .topbar-in { gap: 16px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 .diff-list + p { margin-top: 10px; }
+.look-first + p { margin-top: 14px; }
+.stage-inner ol + p, .stage-inner ul + p, .stage-inner pre + p, .stage-inner .evidence + p { margin-top: 14px; }

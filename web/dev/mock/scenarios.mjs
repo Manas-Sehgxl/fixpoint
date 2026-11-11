@@ -164,7 +164,7 @@ export const couponCase = {
 export const qtyBelowOne = {
   key: 'qty-below-one',
   title: 'Quantity goes below one and the line total turns negative',
-  text: 'Pressed minus on Masala Chai a few times and the quantity went to -1 with a line total of -₹249. The cart total went down too. [stub:stubborn]',
+  text: 'Pressed minus on Masala Chai a few times and the quantity went to -1 with a line total of -₹249. The cart total went down too.',
   reporter: { name: 'Kabir', email: 'kabir@example.com' },
   context: {
     page_url: `${URL}/#cart`, user_agent: ua, viewport_w: 1280, viewport_h: 800,

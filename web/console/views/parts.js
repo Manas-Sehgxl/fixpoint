@@ -56,7 +56,7 @@ export function runBlock(run, ctx, { heading = null } = {}) {
     h('span', null, runHeadline(run), run.summary && run.status !== 'running' ? ' ' : '', run.status !== 'running' ? run.summary : ''));
   el.append(head);
   if (run.simulated) el.append(h('p', { class: 'simulated-tag' }, 'Simulated run: the stub runner produced this, not a real browser.'));
-  if (run.error) el.append(h('p', { class: 'run-error' }, rich(run.error)));
+  if (run.error) el.append(h('p', { class: 'run-problem' }, rich(run.error)));
 
   const ol = stepList(run);
   el.append(ol);

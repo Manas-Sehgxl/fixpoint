@@ -84,7 +84,9 @@ function createLive(ctx) {
   function update(r) {
     const link = h('a', { href: `/reports/${r.id}` }, h('span', { class: 'case-num' }, `#${r.seq}`), ' ', r.title);
     title.replaceChildren(link);
-    stage.textContent = stageSentence(r);
+    stage.textContent = r.proof
+      ? `Proven in ${duration(r.proof.time_to_proof_s)}.${r.proof.suite_test_id ? ` Its check joins the suite as test ${r.proof.suite_test_id.replace(/^t_/, '')}.` : ''}`
+      : stageSentence(r);
     stage.prepend(mark(markFor(r.status)), ' ');
     const f = [];
     f.push(['Attempt', r.attempts.length ? `${r.attempts.length} of ${r.max_attempts}` : `0 of ${r.max_attempts}`]);
@@ -99,7 +101,7 @@ function createLive(ctx) {
       shownRun = null;
       return;
     }
-    runTitle.textContent = liveRunTitle(run, r);
+    runTitle.textContent = run.status === 'running' ? liveRunTitle(run, r) : `${liveRunTitle(run, r).replace(/^Re-checking/, 'Re-checked')}, finished`;
     if (shownRun !== run.id) { steps.replaceChildren(); shownRun = run.id; stick = true; }
     fillSteps(steps, mergeSteps(run, ctx.store.live.get(run.id)));
     if (stick) feed.scrollTop = feed.scrollHeight;

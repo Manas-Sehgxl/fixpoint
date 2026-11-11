@@ -1,1 +1,26 @@
-<!doctype html><title>Fixpoint status</title><p>Status page placeholder.</p>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your report</title>
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/STIX2Text-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+<script type="module" src="/status.js"></script>
+</head>
+<body class="status-body">
+<a class="skip" href="#main">Skip to the content</a>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <span id="brand" class="brand"><span class="brand-word">Fixpoint</span></span>
+    <p class="sys-state quiet">Bug report status</p>
+  </div>
+</header>
+<main id="main" class="wrap view" tabindex="-1"></main>
+<div id="conn" class="conn" role="status" hidden></div>
+<div id="announcer" class="visually-hidden" aria-live="polite"></div>
+</body>
+</html>

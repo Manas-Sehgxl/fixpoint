@@ -198,7 +198,7 @@ function regressBody(item, r, ctx) {
   const passed = done.filter((x) => x.status === 'passed').length;
   const running = runs.find((x) => x.status === 'running');
   let line;
-  if (running) line = `Re-checking ${plural(runs.length, 'earlier fix', 'earlier fixes')} so this patch does not break them. ${passed} of ${runs.length} done.`;
+  if (running) line = `Re-checking the checks of earlier fixes so this patch does not break them. ${passed ? `${passed} still ${passed === 1 ? 'holds' : 'hold'} so far.` : 'The first is running.'}`;
   else if (passed === runs.length) line = runs.length === 1 ? 'Re-checked the 1 earlier fix. It still holds.' : `Re-checked ${countWord(runs.length)} earlier fixes. ${runs.length === 2 ? 'Both' : 'All'} still hold.`;
   else line = `Re-checked ${plural(runs.length, 'earlier fix', 'earlier fixes')}. ${runs.length - passed} broke, so this attempt did not count.`;
   return h('div', null,

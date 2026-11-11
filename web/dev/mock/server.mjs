@@ -167,6 +167,7 @@ class World {
   reportAt(inst, now) {
     const r = structuredClone(inst.base);
     const start = this.startOf(inst, now);
+    if (inst.frozen) r.created_at = iso(start);
     for (const e of inst.entries) {
       const when = start + e.t * 1000;
       if (when > now) break;
@@ -178,7 +179,6 @@ class World {
 
   report(inst, now = Date.now()) {
     const r = this.reportAt(inst, now);
-    if (inst.frozen) r.created_at = iso(this.startOf(inst, now));
     r.track = track(r);
     r.public = publicView(r);
     r.simulated = this.name === 'simulated';

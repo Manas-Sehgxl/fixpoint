@@ -116,6 +116,8 @@ export function model(r) {
       default: end = { type: 'active', at: [x, y], preview: r.status === 'fixing' ? [y, y] : [x, f(x)] };
     }
   }
+  const lastMove = moves[moves.length - 1];
+  if (end && end.type === 'failed' && lastMove && lastMove.to[0] === end.at[0] && lastMove.to[1] === end.at[1]) delete lastMove.tip;
   const sentence = story.length ? story.join('; ').replace(/^./, (c) => c.toUpperCase()) + '.' : '';
   return { moves: moves.concat(tail), end, sentence };
 }
@@ -172,11 +174,20 @@ export function createCobweb({ compact = false } = {}) {
     let delay = 0;
     for (const mv of m.moves) {
       seen.add(mv.key);
-      if (drawn.has(mv.key)) continue;
+      if (drawn.has(mv.key)) {
+        const g = drawn.get(mv.key);
+        if ((g.dataset.tip || '') !== (mv.tip || '')) {
+          if (g.children[1]) g.children[1].remove();
+          if (mv.tip) g.append(tip(mv));
+          g.dataset.tip = mv.tip || '';
+        }
+        continue;
+      }
       const g = s('g', { class: `cw-move mv-${mv.tone}` });
       const line = s('line', { x1: X(mv.from[0]), y1: Y(mv.from[1]), x2: X(mv.to[0]), y2: Y(mv.to[1]) });
       g.append(line);
       if (mv.tip) g.append(tip(mv));
+      g.dataset.tip = mv.tip || '';
       movesG.append(g);
       drawn.set(mv.key, g);
       if (animate) {
