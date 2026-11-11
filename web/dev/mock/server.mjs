@@ -14,7 +14,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { build, track, publicView, artifacts, fmtDuration } from './plan.mjs';
+import { build, track, publicView, artifacts } from './plan.mjs';
 import { fixtures, LIVE_ID } from './fixtures.mjs';
 import { freeDelivery } from './scenarios.mjs';
 import { shot } from './png.mjs';
@@ -30,7 +30,7 @@ const arg = (name, def) => {
 const PORT = Number(arg('port', process.env.PORT || 7801));
 const DEFAULT_SCENARIO = arg('scenario', process.env.MOCK_SCENARIO || 'default');
 
-export const SCENARIOS = {
+const SCENARIOS = {
   default: 'Everything ready; eight reports, one playing live.',
   empty: 'A fresh install: no reports and an empty suite.',
   simulated: 'Stub runners are on, so every surface says runs are simulated.',
@@ -556,4 +556,3 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`Every state: http://localhost:${PORT}/__mock`);
 });
 
-export { fmtDuration };

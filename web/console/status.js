@@ -94,7 +94,7 @@ function render() {
   if (v.stage === 'fixed' && v.before_shot && v.after_shot) {
     parts.push(h('section', { class: 'status-section', 'aria-labelledby': 'ba-h' },
       h('h2', { id: 'ba-h' }, 'Before and after the fix'),
-      compare({ before: v.before_shot, after: v.after_shot, beforeLabel: 'Before: the problem you reported', afterLabel: 'After: the same steps, fixed', alt: 'Screenshot of the app taken by our automated browser.', start: cmpPos, onMove: (p) => { cmpPos = p; } })));
+      compare({ before: v.before_shot, after: v.after_shot, beforeLabel: 'Before: what you saw', afterLabel: 'After: fixed', alt: 'Screenshot of the app taken by our automated browser.', start: cmpPos, onMove: (p) => { cmpPos = p; } })));
   }
   parts.push(h('section', { class: 'status-section', 'aria-labelledby': 'you-h' },
     h('h2', { id: 'you-h' }, 'What you told us'),

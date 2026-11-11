@@ -9,7 +9,7 @@ import { diffList } from '../diff.js';
 import { compare } from '../compare.js';
 import { api } from '../api.js';
 import {
-  duration, credits, usd, clock, dateTime, plural, countWord, statusText, markFor, browser, since, ordinal, ACTIVE,
+  duration, credits, usd, dateTime, plural, countWord, statusText, markFor, browser, since, ordinal, ACTIVE,
 } from '../format.js';
 import { runBlock, conversation, section, fillSteps, mergeSteps } from './parts.js';
 
