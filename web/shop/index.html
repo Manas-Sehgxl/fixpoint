@@ -1,1 +1,63 @@
-<!doctype html><title>Demo shop</title><p>Shop placeholder.</p>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tapri: chai by the pouch</title>
+    <meta name="description" content="Tapri is a roadside chai stall that packs its own tea. Order pouches of masala chai, kadak Assam, kahwa and filter kaapi." />
+    <link rel="stylesheet" href="css/tapri.css" />
+  </head>
+  <body>
+    <a class="skip" href="#menu">Skip to the menu</a>
+
+    <header class="signboard">
+      <div class="shell signboard-grid">
+        <div class="signboard-mark">
+          <p class="stall-line">Stall no. 4, Sector 14 market</p>
+          <h1 class="wordmark">Tapri</h1>
+          <p class="tagline">Chai by the pouch. We grind, blend and pack it at the stall every morning.</p>
+        </div>
+        <p class="ribbon">
+          <span class="ribbon-big">Free delivery</span>
+          <span class="ribbon-small">on orders of &#8377;499 or more. Below that, delivery is &#8377;40.</span>
+        </p>
+      </div>
+      <div class="paint-stripe" aria-hidden="true"></div>
+    </header>
+
+    <main class="shell layout">
+      <section id="menu" class="menu" aria-labelledby="menu-heading">
+        <div class="menu-head">
+          <div>
+            <h2 id="menu-heading">Today's menu</h2>
+            <p id="menu-count" class="menu-count" aria-live="polite">8 teas on the board</p>
+          </div>
+          <form id="search-form" class="search" role="search">
+            <label for="search">Search the menu</label>
+            <input
+              id="search"
+              name="q"
+              type="search"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="adrak, kahwa, kaapi"
+            />
+          </form>
+        </div>
+        <div id="product-grid" class="grid"></div>
+      </section>
+
+      <aside id="bill" class="pad" aria-labelledby="bill-heading"></aside>
+    </main>
+
+    <footer class="footer">
+      <div class="shell footer-grid">
+        <p>Tapri packs tea in Sector 14 and delivers inside the hour. Cash or UPI at the door.</p>
+        <p>Something not adding up? Use the report button and we will look at it.</p>
+      </div>
+    </footer>
+
+    <script type="module" src="js/app.js"></script>
+    <script src="{{FIXPOINT_ORIGIN}}/widget.js" data-fixpoint="{{FIXPOINT_ORIGIN}}" defer></script>
+  </body>
+</html>
