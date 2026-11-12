@@ -26,8 +26,9 @@ never starts a browser and never calls a model.
   that file, `docs/SPEC.md` or `web/web.go`; if one of them is wrong, say so instead.
 - **Web files are embedded** by `web/web.go` with `go:embed`. A change under
   `web/console/`, `web/shop/` or `web/widget/` is invisible until the binary is rebuilt,
-  and the demo shop is re-seeded from the embedded copy into `.fixpoint/shop/` on
-  `fixpoint up` and on `demo reset`.
+  and the demo shop is seeded from the embedded copy into `.fixpoint/shop/` by
+  `fixpoint up` when it is missing and by every `demo reset` (`up` keeps an existing
+  shop, since proven reports describe its patched files). Shop changes need a reset.
 - **Honesty.** Fixpoint must never show a result Kane did not produce. The stub runners
   exist for development and tests, are off unless `--stubs` is passed, and every surface
   says runs are simulated when they are on.

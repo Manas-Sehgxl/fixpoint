@@ -360,6 +360,11 @@ func stageOf(s core.Status) string {
 // interrupt turns an in-progress report into a retryable error.
 func (w *Worker) interrupt(ctx context.Context, id, msg string) {
 	restored := w.restoreBaseline(ctx, id)
+	if restored {
+		// The files are back; a stale baseline must not be restored again
+		// later over fixes other reports made in the meantime.
+		w.dropSnapshots(id)
+	}
 	now := time.Now().UTC()
 	r, err := w.update(id, func(r *core.Report) {
 		for i := range r.Runs {

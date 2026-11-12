@@ -542,6 +542,7 @@ func (w *Worker) fail(ctx context.Context, id, stage, msg, remedy string) {
 		remedy = "Fix the problem above, then retry this report."
 	}
 	if w.restoreBaseline(ctx, id) {
+		w.dropSnapshots(id)
 		remedy = "The app's files were put back as they were before the first attempt. " + remedy
 	}
 	w.update(id, func(r *core.Report) {

@@ -490,7 +490,12 @@ func TestCrashRecovery(t *testing.T) {
 	if err := h.w.Retry(crashed.ID); err != nil {
 		t.Fatal(err)
 	}
-	h.wait(crashed.ID, core.StatusProven)
+	// The other report's fix covers this one too, and the retry must not
+	// undo it, so Kane can no longer reproduce the problem.
+	h.wait(crashed.ID, core.StatusNeedsInfo)
+	if !strings.Contains(h.app(), "sum(items)") {
+		t.Errorf("the retry undid the other report's fix: app.js = %q", h.app())
+	}
 }
 
 func TestRollbackOnRestartedCrashRestoresFiles(t *testing.T) {
@@ -543,5 +548,34 @@ func TestPositionAndStartURL(t *testing.T) {
 		if got := startURL(in, "http://fallback"); got != want {
 			t.Errorf("startURL(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// A report that stops with an error after patching puts the files back once.
+// Retrying it later must not restore that old baseline over a change made in
+// between, such as another report's proven fix.
+func TestRetryKeepsChangesMadeAfterError(t *testing.T) {
+	h := newHarness(t, func(n int, req kane.Request, app string) core.RunStatus {
+		if n == 2 {
+			return core.RunErrored
+		}
+		return failsWhile("BUG")(n, req, app)
+	}, func(n int, in agent.FixInput, app string) (agent.Fix, string) {
+		return patched("Fix."), strings.Replace(app, "BUG", "sum(items)", 1)
+	}, nil)
+	h.start()
+	id := h.submit("Total is wrong")
+	h.wait(id, core.StatusError)
+	if !strings.Contains(h.app(), "BUG") {
+		t.Fatalf("the error did not roll the patch back: %q", h.app())
+	}
+	other := filepath.Join(h.dir, "index.html")
+	os.WriteFile(other, []byte("<h1>shop, fixed by another report</h1>\n"), 0o644)
+	if err := h.w.Retry(id); err != nil {
+		t.Fatal(err)
+	}
+	h.wait(id, core.StatusProven)
+	if b, _ := os.ReadFile(other); !strings.Contains(string(b), "another report") {
+		t.Errorf("the retry restored an old baseline over index.html: %q", b)
 	}
 }
