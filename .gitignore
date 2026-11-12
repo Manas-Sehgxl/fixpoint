@@ -7,7 +7,7 @@
 /fixpoint.exe
 
 # Kane CLI run artifacts
-.testmuai/evidence/
+.testmuai/
 *.evidence
 
 # Local agent settings
