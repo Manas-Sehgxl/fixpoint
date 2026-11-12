@@ -1,55 +1,71 @@
 # Fixpoint
 
-Bug reports that close themselves.
+**Bug reports that close themselves.**
 
-A web app embeds one script tag. A user clicks "Report a problem" and types what went
-wrong. Fixpoint then runs a loop with nobody in it: a coding agent writes one
-plain-English browser check from the report, **Kane CLI runs that check in a real browser
-and reproduces the bug**, the agent patches the app's source, **Kane re-runs the same
-check and the check of every fix that came before it**, and the report closes with the
-failing run, the patch and the passing run side by side. The check stays behind as a
-regression test. Three failed attempts roll every patch back and hand the report to a
-person with everything attached.
+[![Go 1.24+](https://img.shields.io/badge/Go-1.24%2B-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Standard library only](https://img.shields.io/badge/dependencies-none-2ea44f)](go.mod)
+[![Kane CLI](https://img.shields.io/badge/verified%20by-Kane%20CLI-ff4a1f)](https://www.npmjs.com/package/@testmuai/kane-cli)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 
-The name is the idea: iterate until the result stops changing.
+A user clicks "Report a problem" in your web app and types what went wrong. Fixpoint takes it
+from there, with nobody in the loop:
 
-```
-go run ./cmd/fixpoint up
-```
+1. **Check.** Claude Code reads the report and your source and writes one plain-English
+   browser check that fails while the bug exists.
+2. **Reproduce.** Kane CLI runs that check in a real Chrome. A failure proves the bug is real.
+3. **Fix.** Claude Code patches your source, with Kane's steps, screenshots and failure in
+   the prompt.
+4. **Prove.** Kane runs the same check again, then the check of every earlier fix. Only when
+   all of them pass is the report closed, with the failing run, the patch and the passing
+   run side by side.
 
-That starts the console, the demo shop and the loop. Nothing else to configure.
+Three failed attempts roll every patch back and hand the report to a person with everything
+attached. The check stays behind as a regression test. The name is the idea: iterate until
+the result stops changing.
 
-## Prerequisites
+<p align="center">
+  <img src="docs/images/board.jpg" alt="The Fixpoint board: five reports, three proven, two waiting on the reporter" width="49%">
+  <img src="docs/images/case-file.jpg" alt="A case file: the report, the check, Kane's runs, the patch and the proof" width="49%">
+</p>
+<p align="center"><sub>The board and a case file. These screenshots come from the demo with <code>--stubs</code>, so every run is marked Simulated.</sub></p>
+
+## Contents
+
+- [Quick start](#quick-start)
+- [The first two minutes](#the-first-two-minutes)
+- [How the loop works](#how-the-loop-works)
+- [How Kane CLI is used](#how-kane-cli-is-used)
+- [Point it at your own app](#point-it-at-your-own-app)
+- [Architecture](#architecture)
+- [Honesty, and what `--stubs` is not](#honesty-and-what---stubs-is-not)
+- [Deliberately out of scope](#deliberately-out-of-scope)
+
+## Quick start
+
+You need four things on your machine:
 
 | | |
 |---|---|
-| Go 1.24 or newer | to build and run Fixpoint. Nothing else: standard library only, no `go get`. |
-| Kane CLI | `npm install -g @testmuai/kane-cli`, then `kane-cli login`. Every check is run by Kane, in a real browser, on your machine. |
-| Claude Code | installed and signed in. It writes the checks and the patches. |
-| Chrome | Kane drives it. |
+| **Go 1.24 or newer** | Fixpoint is one binary built from the standard library only. No `go get`. |
+| **Kane CLI** | `npm install -g @testmuai/kane-cli`, then `kane-cli login`. Every check runs in Kane, in a real browser, on your machine. |
+| **Claude Code** | Installed and signed in. It writes the checks and the patches. |
+| **Chrome** | Kane drives it. |
 
-`fixpoint doctor` tells you which of those is missing and what to type:
+Check them, then start everything:
 
-```
-$ go run ./cmd/fixpoint doctor
-fixpoint 0.1.0
-
-no  Kane CLI     Kane CLI is not installed.
-              Install Kane CLI: `npm install -g @testmuai/kane-cli`, then `kane-cli login`.
-ok  Claude Code  2.1.322 (Claude Code) at /opt/node22/bin/claude
-ok  Chrome       /usr/bin/google-chrome
-ok  Target       the built-in demo shop, served by `fixpoint up` at http://localhost:4000
-
-Console would run at http://localhost:7777
-
-Something required is missing; the lines above say what to do.
+```sh
+go run ./cmd/fixpoint doctor   # says what is missing and what to type
+go run ./cmd/fixpoint up       # console on :7777, demo shop on :4000, the loop
 ```
 
-It exits 1 while something required is missing, so it fits in a setup script.
+`doctor` exits 1 while something required is missing, so it fits in a setup script. No
+credentials yet? `go run ./cmd/fixpoint up --stubs` runs the whole loop with simulated
+runners, and every page says nothing was verified.
 
-## Run it
+<details>
+<summary>All commands and flags</summary>
 
-```
+```sh
 go run ./cmd/fixpoint up                 # console, demo shop and the loop
 go run ./cmd/fixpoint up --stubs         # no credentials needed; nothing is verified
 go run ./cmd/fixpoint doctor             # is Kane CLI, the agent, Chrome and the target ready
@@ -58,36 +74,14 @@ go run ./cmd/fixpoint demo reset --yes   # re-seed the demo shop, clear reports 
 go run ./cmd/fixpoint version
 ```
 
-`up` prints where everything is and whether the two tools it depends on are ready. This
-transcript is from a machine with no Kane CLI, so it was taken with `--stubs` (and on spare
-ports, because another Fixpoint held the defaults):
+Flags for `up`: `--addr` (console, default `127.0.0.1:7777`), `--shop-addr` (demo shop,
+default `127.0.0.1:4000`), `--data` (working directory, default `.fixpoint`), `--stubs`,
+`--autonomy auto|ask`.
 
-```
-$ go run ./cmd/fixpoint up --stubs --addr 127.0.0.1:7821 --shop-addr 127.0.0.1:7822
+`demo reset --yes` is for a stopped Fixpoint. While one is running, use "Reset the demo" on
+the console's Setup page, which also clears what the running process holds in memory.
 
-Fixpoint 0.1.0
-
-  Console   http://localhost:7821
-  Demo shop http://localhost:7822   (report a problem there with the button at the bottom right)
-
-  Kane CLI (simulated)       stub-kane 0.0.0, signed in, simulated
-  Claude Code (simulated)    stub-agent 0.0.0 (Claude Code stand-in), signed in, simulated
-
-  Simulated runners are on: no browser is being driven and nothing here is
-  real verification. Leave --stubs off to use Kane CLI and the coding agent.
-
-Press Ctrl+C to stop.
-```
-
-With the real runners the two tool lines carry Kane CLI's and Claude Code's own versions,
-there is no simulated notice, and the addresses are `http://localhost:7777` and
-`http://localhost:4000`.
-
-Flags: `--addr` (console, default `127.0.0.1:7777`), `--shop-addr` (demo shop, default
-`127.0.0.1:4000`), `--data` (working directory, default `.fixpoint`), `--stubs`,
-`--autonomy auto|ask`. `demo reset --yes` is for a stopped Fixpoint; while one is running,
-use "Reset the demo" on the console's Setup page, which also clears what the running
-process holds in memory.
+</details>
 
 ## The first two minutes
 
@@ -104,7 +98,7 @@ process holds in memory.
    took, its screenshots, the unified diff, and the failing and passing screenshots side
    by side.
 5. Reload the shop. The total updates now. The check you caused is on the **Suite** page,
-   and it will be re-run after every later patch.
+   and it will be run again after every later patch.
 
 ## How the loop works
 
@@ -200,9 +194,10 @@ Details Fixpoint relies on:
 - Kane runs with its working directory set to `.fixpoint/kane/`, so its `.testmuai/` and
   its evidence packs land inside Fixpoint's data directory and not in your repo.
 - The `.evidence` pack is opened for each run: step screenshots become
-  `.fixpoint/artifacts/<report>/<run>/step-<n>.png`, the first `failure.yaml` is kept as
-  text, and up to 20 error-level browser console lines are collected. A run with no pack
-  is still a valid run.
+  `.fixpoint/artifacts/<report>/<run>/step-<n>.jpg` (or `.png`, as Kane wrote them), each
+  step's `step.json` marks the failed one, the failure record is kept as text, and up to
+  20 error-level browser console lines are collected. Both Kane 0.10's layout and the
+  older one are read. A run with no pack is still a valid run.
 - Credits, duration, `test_url` and Kane's own bug verdict, when it confirms one, are
   recorded per run and shown in the case file.
 
@@ -320,7 +315,7 @@ blocks.
 `--stubs` swaps in stand-in runners for development: no browser is driven and no model is
 called. It exists so the loop can be worked on and tested without credentials, and because
 the tests must be hermetic. With it on, the demo shop really is patched and really is
-fixed, so the loop is faithful - but the browser and the model are stand-ins. With them on,
+fixed, so the loop is faithful. The browser and the model are the only stand-ins. With them on,
 the demo report in "the first two minutes" above reaches `proven` in about 11 seconds, with
 `js/cart.js` really patched (+1 -4) and the check really saved as suite test 1.
 
@@ -334,7 +329,7 @@ Claude Code installed, and `--stubs` left off.
 ## Deliberately out of scope
 
 Accounts and login. More than one target at a time. More than one report at a time.
-Mobile targets. Deploying the patch, committing it or opening a pull request - Fixpoint
+Mobile targets. Deploying the patch, committing it or opening a pull request: Fixpoint
 writes the diff and leaves it in your working tree. A database: reports are JSON files.
 Any agent other than Claude Code, though the adapter is behind an interface so another
 preset is a small job. No secrets are stored: Kane and the agent use their own sign-ins.
