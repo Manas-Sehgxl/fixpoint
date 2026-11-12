@@ -232,7 +232,7 @@ details.more[open] > summary { margin-bottom: 8px; }
 .empty-short p + p { margin-top: 12px; }
 
 /* Case file */
-.case { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+.case { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: auto 1fr; column-gap: var(--gutter); align-items: start; }
 .case-head { grid-column: 1 / span 8; grid-row: 1; padding-bottom: 32px; }
 .case-side { grid-column: 9 / span 4; grid-row: 1 / span 2; padding-left: 16px; }
 .case-main { grid-column: 1 / span 8; grid-row: 2; }
@@ -504,6 +504,7 @@ details.diff[open] > summary { border-bottom: 1px solid var(--grid); }
 }
 @media (max-width: 900px) {
   :root { --pad: 24px; }
+  .case { grid-template-rows: none; }
   .case-head, .case-side, .case-main { grid-column: 1 / -1; grid-row: auto; padding-left: 0; }
   .case-side { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 0 32px; align-items: start; padding-bottom: 32px; }
   .case-side .cobweb-figure { grid-row: 1 / span 3; }

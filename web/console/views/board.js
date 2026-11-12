@@ -5,7 +5,7 @@ import { h, reconcile, rich, copyButton } from '../dom.js';
 import { mark, track } from '../marks.js';
 import { createCobweb } from '../cobweb.js';
 import {
-  duration, ago, since, statusText, stageSentence, markFor, ACTIVE, WORKING, NEEDS_PERSON,
+  duration, ago, since, statusText, stageSentence, markFor, toolName, ACTIVE, WORKING, NEEDS_PERSON,
 } from '../format.js';
 import { fillSteps, mergeSteps } from './parts.js';
 
@@ -40,12 +40,13 @@ export function systemLine(sys) {
   const problems = [];
   if (!t.reachable) problems.push({ text: `${t.name || 'The target app'} does not answer at ${t.url}.`, remedy: t.demo ? 'Fixpoint serves the demo shop itself: restart `fixpoint up`.' : 'Start the app, or check `target.url` in fixpoint.json.' });
   for (const tool of [sys.kane, sys.agent]) if (tool.problem) problems.push({ text: tool.problem, remedy: tool.remedy });
-  const ok = (tool) => `${tool.name} ${tool.version ? tool.version + ' ' : ''}${tool.signed_in === 'yes' ? 'is signed in' : 'is ready'}`;
+  const plain = (tool) => toolName(tool.name);
+  const ok = (tool) => `${plain(tool)} ${tool.version ? tool.version + ' ' : ''}${tool.signed_in === 'yes' ? 'is signed in' : 'is ready'}`;
   const parts = [];
   if (t.reachable) parts.push(h('span', { class: 'sys-item' }, mark('done'), `Watching ${t.name} at `, h('a', { href: t.url, target: '_blank', rel: 'noopener noreferrer' }, t.url.replace(/^https?:\/\//, '')), '.'));
   for (const tool of [sys.kane, sys.agent]) {
     if (tool.problem) continue;
-    parts.push(h('span', { class: 'sys-item' }, mark(tool.stub ? 'waiting' : 'done'), tool.stub ? `${tool.name} is simulated by ${tool.version || 'a stub'}.` : `${ok(tool)}.`));
+    parts.push(h('span', { class: 'sys-item' }, mark(tool.stub ? 'waiting' : 'done'), tool.stub ? `${plain(tool)} is simulated.` : `${ok(tool)}.`));
   }
   const line = h('p', { class: 'sysline' }, parts);
   if (!problems.length) return line;

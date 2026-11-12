@@ -4,17 +4,23 @@
 
 import { h, rich, copyButton, announce } from '../dom.js';
 import { mark } from '../marks.js';
+import { toolName } from '../format.js';
 
 function toolBlock(t, role) {
   const ok = t.found && !t.problem;
+  const name = toolName(t.name);
   const rows = [
     ['Found', t.found ? (t.path ? h('code', null, t.path) : 'Yes') : 'No'],
     ['Version', t.version || 'Unknown'],
   ];
   if (t.signed_in && t.signed_in !== 'unknown') rows.push(['Signed in', t.signed_in === 'yes' ? 'Yes' : 'No']);
   return h('section', { class: `tool ${ok ? 'is-ok' : 'is-bad'}`, 'aria-labelledby': `tool-${role}` },
-    h('h2', { id: `tool-${role}` }, mark(ok ? 'done' : 'failed', ok ? 'Ready' : 'Needs attention'), ' ', t.name),
-    h('p', { class: 'tool-state' }, ok ? (t.stub ? `Simulated: the stub runner stands in for ${t.name}.` : `Ready. ${role === 'kane' ? 'Kane drives a real browser for every check.' : 'It writes the checks and the patches.'}`) : t.problem),
+    h('h2', { id: `tool-${role}` }, mark(ok ? (t.stub ? 'waiting' : 'done') : 'failed', ok ? (t.stub ? 'Simulated' : 'Ready') : 'Needs attention'), ' ', name),
+    h('p', { class: 'tool-state' }, ok
+      ? (t.stub
+        ? `Simulated. A stub runner stands in for ${name}, so nothing here is real verification. Leave --stubs off to use the real one.`
+        : `Ready. ${role === 'kane' ? 'Kane drives a real browser for every check.' : 'It writes the checks and the patches.'}`)
+      : t.problem),
     !ok && t.remedy ? h('p', { class: 'remedy' }, rich(t.remedy)) : null,
     h('dl', { class: 'facts facts-inline' }, rows.map(([k, v]) => h('div', null, h('dt', null, k), h('dd', null, v)))));
 }

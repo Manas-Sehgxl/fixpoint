@@ -120,6 +120,14 @@ export function browser(ua) {
   return [name && `${name} ${m[2]}`, os && `on ${os}`].filter(Boolean).join(' ') || ua.slice(0, 60);
 }
 
+/**
+ * toolName is a tool's name without a trailing "(simulated)": the engine puts
+ * it there, and the console says that in its own words.
+ */
+export function toolName(name) {
+  return String(name || '').replace(/\s*\(simulated\)\s*$/i, '');
+}
+
 export function humanize(s) {
   const t = String(s || '').replace(/_/g, ' ');
   return t.charAt(0).toUpperCase() + t.slice(1);

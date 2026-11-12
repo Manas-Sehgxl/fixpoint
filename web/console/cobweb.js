@@ -37,9 +37,8 @@ export function model(r) {
   };
 
   if (!last) {
-    if (r.status === 'queued') end = { type: 'pending', at: [x, y] };
-    else if (r.status === 'triaging') end = { type: 'active', at: [x, y] };
-    story.push(r.status === 'queued' ? 'Waiting in line' : 'The check is being written');
+    if (r.status === 'queued') { end = { type: 'pending', at: [x, y] }; story.push('Waiting in line'); }
+    else if (r.status === 'triaging') { end = { type: 'active', at: [x, y] }; story.push('The check is being written'); }
   } else if (last.status === 'running') {
     end = { type: 'active', at: [x, y], preview: [x, f(x)] };
     story.push('Kane is trying to reproduce it');

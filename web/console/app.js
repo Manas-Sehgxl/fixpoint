@@ -5,7 +5,7 @@
 import { h, announce, clear, rich } from './dom.js';
 import { api, events } from './api.js';
 import { mark, logo } from './marks.js';
-import { duration, since, ago } from './format.js';
+import { duration, since, ago, toolName } from './format.js';
 import * as board from './views/board.js';
 import * as casefile from './views/casefile.js';
 import * as suite from './views/suite.js';
@@ -140,8 +140,9 @@ function renderChrome() {
     if (store.systemError) sysState.append(h('a', { href: '/setup', class: 'sys-link is-bad' }, mark('failed'), h('span', null, 'Not connected')));
     return;
   }
-  const bad = [!s.target.reachable && `${s.target.name || 'The app'} is not answering`, s.kane.problem && `${s.kane.name} needs attention`, s.agent.problem && `${s.agent.name} needs attention`].filter(Boolean);
-  const long = bad.length ? bad[0] : s.simulated ? 'Simulated runners' : `${s.target.name}, ${s.kane.name} and ${s.agent.name} are ready`;
+  const plain = toolName;
+  const bad = [!s.target.reachable && `${s.target.name || 'The app'} is not answering`, s.kane.problem && `${plain(s.kane.name)} needs attention`, s.agent.problem && `${plain(s.agent.name)} needs attention`].filter(Boolean);
+  const long = bad.length ? bad[0] : s.simulated ? 'Simulated runners are on' : `${s.target.name}, ${plain(s.kane.name)} and ${plain(s.agent.name)} are ready`;
   const short = bad.length ? 'Needs attention' : s.simulated ? 'Simulated' : 'Ready';
   sysState.append(h('a', { href: '/setup', class: bad.length ? 'sys-link is-bad' : 'sys-link' },
     mark(bad.length ? 'failed' : s.simulated ? 'waiting' : 'done'),
