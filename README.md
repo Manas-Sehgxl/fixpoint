@@ -24,10 +24,10 @@ attached. The check stays behind as a regression test. The name is the idea: ite
 the result stops changing.
 
 <p align="center">
-  <img src="docs/images/board.jpg" alt="The Fixpoint board: five reports, four proven, one waiting on the reporter" width="49%">
-  <img src="docs/images/case-file.jpg" alt="A case file: the report, the check, Kane's runs, the patch and the proof" width="49%">
+  <img src="docs/images/site-hero.jpg" alt="The Fixpoint page: the report queue beside the patch for the demo shop's free-delivery bug" width="49%">
+  <img src="docs/images/site-loop.jpg" alt="How a report gets fixed: the check written from a report, and a real Kane CLI run" width="49%">
 </p>
-<p align="center"><sub>The board and a case file. These screenshots come from the demo with <code>--stubs</code>, so every run is marked Simulated.</sub></p>
+<p align="center"><sub>From the project page. The patch is the real fix for one of the demo shop's planted bugs, and the terminal shows a real Kane CLI run.</sub></p>
 
 ## Contents
 
