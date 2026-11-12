@@ -142,12 +142,16 @@ function renderChrome() {
   }
   const plain = toolName;
   const bad = [!s.target.reachable && `${s.target.name || 'The app'} is not answering`, s.kane.problem && `${plain(s.kane.name)} needs attention`, s.agent.problem && `${plain(s.agent.name)} needs attention`].filter(Boolean);
-  const long = bad.length ? bad[0] : s.simulated ? 'Simulated runners are on' : `${s.target.name}, ${plain(s.kane.name)} and ${plain(s.agent.name)} are ready`;
-  const short = bad.length ? 'Needs attention' : s.simulated ? 'Simulated' : 'Ready';
-  sysState.append(h('a', { href: '/setup', class: bad.length ? 'sys-link is-bad' : 'sys-link' },
-    mark(bad.length ? 'failed' : s.simulated ? 'waiting' : 'done'),
-    h('span', { class: 'sys-long' }, long),
-    h('span', { class: 'sys-short' }, short)));
+  const long = bad.length ? bad[0] : `${s.target.name}, ${plain(s.kane.name)} and ${plain(s.agent.name)} are ready`;
+  const short = bad.length ? 'Needs attention' : 'Ready';
+  // Simulated runners are said once, by the banner below, which stays for as
+  // long as they are on. A problem still shows here.
+  if (bad.length || !s.simulated) {
+    sysState.append(h('a', { href: '/setup', class: bad.length ? 'sys-link is-bad' : 'sys-link' },
+      mark(bad.length ? 'failed' : 'done'),
+      h('span', { class: 'sys-long' }, long),
+      h('span', { class: 'sys-short' }, short)));
+  }
   if (s.simulated) {
     notices.append(h('div', { class: 'simulated', role: 'note' }, h('div', { class: 'wrap' }, mark('waiting'),
       h('p', null, h('strong', null, 'Simulated runners are on. '), 'No browser is being driven and nothing here is real verification. For development only.'))));

@@ -2,7 +2,7 @@
 // panel for whatever the worker is doing, and the reports as rows.
 
 import { h, reconcile, rich, copyButton } from '../dom.js';
-import { mark, track } from '../marks.js';
+import { mark, track, trackLegend } from '../marks.js';
 import { createCobweb } from '../cobweb.js';
 import {
   duration, ago, since, statusText, stageSentence, markFor, toolName, ACTIVE, WORKING, NEEDS_PERSON,
@@ -45,8 +45,9 @@ export function systemLine(sys) {
   const parts = [];
   if (t.reachable) parts.push(h('span', { class: 'sys-item' }, mark('done'), `Watching ${t.name} at `, h('a', { href: t.url, target: '_blank', rel: 'noopener noreferrer' }, t.url.replace(/^https?:\/\//, '')), '.'));
   for (const tool of [sys.kane, sys.agent]) {
-    if (tool.problem) continue;
-    parts.push(h('span', { class: 'sys-item' }, mark(tool.stub ? 'waiting' : 'done'), tool.stub ? `${plain(tool)} is simulated.` : `${ok(tool)}.`));
+    // A simulated runner is said once, by the banner at the top of every page.
+    if (tool.problem || tool.stub) continue;
+    parts.push(h('span', { class: 'sys-item' }, mark('done'), `${ok(tool)}.`));
   }
   const line = h('p', { class: 'sysline' }, parts);
   if (!problems.length) return line;
@@ -121,18 +122,75 @@ function createLive(ctx) {
   return { el, update, step };
 }
 
+// What a person does about a report that waits for them, and the case file
+// is where they do it.
+const ACTION = {
+  needs_info: 'Reply',
+  awaiting_approval: 'Review the fix',
+  escalated: 'Take it over',
+  error: 'See what to do',
+};
+
+/** sameText says whether a report's description only repeats its title. */
+function sameText(a, b) {
+  const norm = (t) => String(t || '').trim().replace(/\s+/g, ' ').replace(/[.!?]+$/, '').toLowerCase();
+  return norm(a) === norm(b);
+}
+
 function row(r) {
   const att = r.attempts ? `${r.attempts} of ${r.max_attempts}` : '';
-  return h('tr', { class: `row is-${r.status}` },
+  const action = NEEDS_PERSON.includes(r.status) && ACTION[r.status];
+  const ttp = r.time_to_proof_s
+    ? [h('span', { class: 'm-label' }, 'Proven in '), h('span', { class: 'ttp-value', dataset: { seconds: r.time_to_proof_s } }, duration(r.time_to_proof_s))]
+    : h('span', { class: 'visually-hidden' }, 'Not proven');
+  const provenAt = justProven.get(r.id);
+  return h('tr', {
+    class: ['row', `is-${r.status}`, action && 'is-needs-you', provenAt !== undefined && 'just-proven'],
+    // A row redrawn mid-moment picks the animation up where it was.
+    style: provenAt !== undefined ? `--since: ${Math.round(provenAt - performance.now())}ms` : null,
+  },
     h('td', { class: 'c-num' }, `#${r.seq}`),
     h('td', { class: 'c-title' },
       h('a', { href: `/reports/${r.id}`, class: 'row-link' }, r.title),
-      h('span', { class: 'row-text' }, r.text)),
-    h('td', { class: 'c-status' }, mark(markFor(r.status)), h('span', null, statusText(r)), r.simulated ? h('span', { class: 'simulated-tag' }, 'Simulated') : null),
-    h('td', { class: 'c-track' }, track(r.track)),
+      sameText(r.title, r.text) ? null : h('span', { class: 'row-text' }, r.text)),
+    h('td', { class: 'c-status' }, mark(markFor(r.status)), h('span', null, statusText(r)),
+      action ? h('a', { class: 'btn btn-primary btn-row', href: `/reports/${r.id}` }, action, h('span', { class: 'visually-hidden' }, ` on report ${r.seq}`)) : null),
+    h('td', { class: 'c-track' }, track(r.track, { tips: true })),
     h('td', { class: 'c-att' }, att ? [h('span', { class: 'm-label' }, 'Attempts '), att] : h('span', { class: 'visually-hidden' }, 'None')),
-    h('td', { class: 'c-ttp' }, r.time_to_proof_s ? [h('span', { class: 'm-label' }, 'Proven in '), duration(r.time_to_proof_s)] : h('span', { class: 'visually-hidden' }, 'Not proven')),
+    h('td', { class: 'c-ttp' }, ttp),
     h('td', { class: 'c-age' }, h('span', { class: 'm-label' }, 'Filed '), h('time', { datetime: r.created_at, dataset: { ago: r.created_at } }, ago(r.created_at))));
+}
+
+// Reports seen turning proven while this page was open, so their rows can
+// mark the moment once: a green pulse, a brief highlight, the time counting up.
+const justProven = new Map(); // report id -> when it turned proven
+const lastStatus = new Map();
+const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function notePromotions(list) {
+  for (const r of list) {
+    const was = lastStatus.get(r.id);
+    if (was && was !== 'proven' && r.status === 'proven') {
+      justProven.set(r.id, performance.now());
+      setTimeout(() => justProven.delete(r.id), 2000);
+    }
+    lastStatus.set(r.id, r.status);
+  }
+}
+
+/** countUp runs a proven row's time to proof from zero to its value, once, timed from when it turned proven. */
+function countUp(el, t0) {
+  if (el.dataset.counted) return;
+  el.dataset.counted = '1';
+  const end = Number(el.dataset.seconds);
+  if (calm() || !(end > 0) || t0 === undefined) return;
+  const ms = 900;
+  const show = (now) => {
+    const k = Math.min(1, Math.max(0, (now - t0) / ms));
+    el.textContent = duration(Math.round(end * (1 - Math.pow(1 - k, 3))));
+    if (k < 1) requestAnimationFrame(show);
+  };
+  show(performance.now());
 }
 
 export function mount(root, ctx) {
@@ -150,7 +208,7 @@ export function mount(root, ctx) {
       h('th', { scope: 'col', class: 'c-num' }, h('span', { class: 'visually-hidden' }, 'Number')),
       h('th', { scope: 'col', class: 'c-title' }, 'Report'),
       h('th', { scope: 'col', class: 'c-status' }, 'Status'),
-      h('th', { scope: 'col', class: 'c-track' }, 'Track'),
+      h('th', { scope: 'col', class: 'c-track' }, 'Track', trackLegend()),
       h('th', { scope: 'col', class: 'c-att' }, 'Attempts'),
       h('th', { scope: 'col', class: 'c-ttp' }, 'Time to proof'),
       h('th', { scope: 'col', class: 'c-age' }, 'Filed'))),
@@ -230,8 +288,10 @@ export function mount(root, ctx) {
       buttons[i].setAttribute('aria-pressed', String(f.key === filter));
       buttons[i].querySelector('.filter-count').textContent = String(list.filter(f.test).length);
     });
+    notePromotions(list);
     const shown = list.filter(FILTERS.find((f) => f.key === filter).test);
-    reconcile(tbody, shown, { key: (r) => r.id, sig: (r) => JSON.stringify(r), render: row });
+    reconcile(tbody, shown, { key: (r) => r.id, sig: (r) => JSON.stringify(r) + justProven.has(r.id), render: row });
+    for (const el of tbody.querySelectorAll('.just-proven .ttp-value')) countUp(el, justProven.get(el.closest('tr').dataset.key));
     table.hidden = !shown.length;
     filterEmpty.textContent = shown.length ? '' : EMPTY_FILTER[filter] || '';
   }

@@ -29,19 +29,45 @@ export function mark(state, label) {
   return s('svg', attrs, markShape(state));
 }
 
-/** track draws the five-node track on a thin line. */
-export function track(nodes, { labels = false } = {}) {
+// The five steps every report's track walks, in the engine's words
+// (internal/view), so the legend can be drawn before any report arrives.
+const STEPS = ['Reported', 'Reproduced', 'Patched', 'Verified', 'Proven'];
+// On the board the nodes sit far enough apart for the legend, whose words alternate between two lines.
+const TIP_GAP = 44;
+
+/**
+ * track draws the five-node track on a thin line. With tips, each node also
+ * names its step and state on hover, and the nodes are spaced to line up
+ * with trackLegend.
+ */
+export function track(nodes, { labels = false, tips = false } = {}) {
   const list = nodes && nodes.length ? nodes : [];
   const said = list.map((n) => `${n.label}: ${LABEL[n.state === 'done' ? 'done' : n.state] || n.state}`).join(', ');
-  const w = 22 * (list.length - 1) + 16;
+  const gap = tips ? TIP_GAP : 22;
+  const w = gap * (list.length - 1) + 16;
   const svg = s('svg', { viewBox: `0 0 ${w} 16`, width: w, height: 16, class: 'track-svg', 'aria-hidden': 'true' },
     s('line', { x1: 8, y1: 8, x2: w - 8, y2: 8, class: 'track-line' }),
-    list.map((n, i) => s('g', { transform: `translate(${i * 22} 0)` }, markShape(trackState(n, i, list)))),
+    list.map((n, i) => s('g', { transform: `translate(${i * gap} 0)`, class: `track-g is-${trackState(n, i, list)}` }, markShape(trackState(n, i, list)))),
   );
-  if (!labels) return h('span', { class: 'track', role: 'img', 'aria-label': `Track. ${said}.` }, svg);
-  return h('ol', { class: 'track track-labelled', 'aria-label': 'Track' },
-    list.map((n, i) => h('li', { class: `track-node is-${n.state}` }, mark(trackState(n, i, list)), h('span', null, n.label),
-      h('span', { class: 'visually-hidden' }, `: ${LABEL[n.state] || n.state}`))));
+  if (labels) {
+    return h('ol', { class: 'track track-labelled', 'aria-label': 'Track' },
+      list.map((n, i) => h('li', { class: `track-node is-${n.state}` }, mark(trackState(n, i, list)), h('span', null, n.label),
+        h('span', { class: 'visually-hidden' }, `: ${LABEL[n.state] || n.state}`))));
+  }
+  const el = h('span', { class: tips ? 'track track-tips' : 'track', role: 'img', 'aria-label': `Track. ${said}.` }, svg);
+  if (tips) {
+    list.forEach((n, i) => el.append(h('span', {
+      class: 'track-hit', 'aria-hidden': 'true', style: { left: `${i * gap}px` },
+      dataset: { tip: `${n.label}: ${(LABEL[trackState(n, i, list)] || n.state).toLowerCase()}` },
+    })));
+  }
+  return el;
+}
+
+/** trackLegend names the five steps under the board's Track header, one under each node. */
+export function trackLegend() {
+  return h('span', { class: 'track-legend', 'aria-hidden': 'true' },
+    STEPS.map((label, i) => h('span', { class: i % 2 ? 'is-low' : null, style: { left: `${8 + i * TIP_GAP}px` } }, label)));
 }
 
 function trackState(n, i, list) {

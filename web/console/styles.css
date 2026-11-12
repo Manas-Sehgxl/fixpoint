@@ -827,3 +827,53 @@ details.diff { border-radius: 12px; overflow: hidden; }
   .tests, .widget, .settings, .reset, .tool, .status-page .status-section, .empty-grid { padding-left: 16px; padding-right: 16px; }
   body::after { height: 50vh; }
 }
+
+/* Board polish: the track's hover tips and legend, the proven moment, the row that needs a person. */
+.rows .c-title { width: 34%; }
+.rows .c-status { width: 1%; padding-right: 32px; }
+.rows th.c-track { position: relative; padding-bottom: 40px; }
+.rows .c-track { padding-right: 28px; }
+.track-legend { position: absolute; left: 0; bottom: 8px; height: 28px; width: 192px; }
+.track-legend span { position: absolute; top: 0; translate: -50% 0; font-size: 10.5px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--soft); white-space: nowrap; }
+.track-legend span.is-low { top: 14px; }
+.track-tips { position: relative; z-index: 1; }
+.track-hit { position: absolute; top: -6px; width: 16px; height: 28px; cursor: default; }
+.track-hit::after {
+  content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 4px); translate: -50% 4px;
+  padding: 5px 9px; border-radius: 8px; background: var(--ink); color: var(--paper);
+  font-size: var(--t13); font-weight: 500; white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 120ms ease, translate 120ms ease;
+}
+.track-hit:hover::after { opacity: 1; translate: -50% 0; }
+
+.rows tr.just-proven td { animation: row-proven 1600ms ease-out var(--since, 0ms) both; }
+.rows tr.just-proven td.c-status > .mark, .rows tr.just-proven .track-g.is-passed > circle { transform-box: fill-box; transform-origin: center; animation: dot-pulse 900ms ease-out var(--since, 0ms) both; }
+@keyframes row-proven { from { background: color-mix(in srgb, var(--pass) 16%, transparent); } to { background: transparent; } }
+@keyframes dot-pulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 var(--pass)); }
+  35% { transform: scale(1.7); filter: drop-shadow(0 0 6px var(--pass)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+}
+
+.rows tr.is-needs-you td:first-child { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--wait) 70%, transparent); }
+.rows tr.is-needs-you td { background: color-mix(in srgb, var(--wait) 5%, transparent); }
+.rows td.c-status .btn-row { display: flex; width: max-content; margin-top: 8px; }
+.btn-row { position: relative; z-index: 1; padding: 4px 12px; min-height: 0; font-size: var(--t13); font-weight: 600; border-radius: 999px;
+  text-decoration: none; vertical-align: 1px; }
+.btn-row:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (max-width: 720px) {
+  .rows tr.is-needs-you { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--wait) 70%, transparent); padding-left: calc(2.6em + 12px); }
+  .rows tr.is-needs-you .c-num { left: 12px; }
+  .rows tr.is-needs-you td:first-child { box-shadow: none; }
+  .rows tr.is-needs-you td { background: none; }
+  .rows td.c-status .btn-row { margin: 0 0 0 auto; }
+}
+
+/* While runners are simulated the banner stays on screen, pinned under the top bar. */
+#notices:has(.simulated) { position: sticky; top: 57px; z-index: 19; }
+body:has(#notices .simulated) .case-side { top: 124px; }
+@media (max-width: 1200px) {
+  .rows .c-title { width: 30%; }
+  .rows td.c-status { white-space: normal; min-width: 9em; padding-right: 16px; }
+  .rows .c-track { padding-right: 16px; }
+}
