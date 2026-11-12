@@ -24,7 +24,7 @@ attached. The check stays behind as a regression test. The name is the idea: ite
 the result stops changing.
 
 <p align="center">
-  <img src="docs/images/board.jpg" alt="The Fixpoint board: five reports, three proven, two waiting on the reporter" width="49%">
+  <img src="docs/images/board.jpg" alt="The Fixpoint board: five reports, four proven, one waiting on the reporter" width="49%">
   <img src="docs/images/case-file.jpg" alt="A case file: the report, the check, Kane's runs, the patch and the proof" width="49%">
 </p>
 <p align="center"><sub>The board and a case file. These screenshots come from the demo with <code>--stubs</code>, so every run is marked Simulated.</sub></p>
@@ -102,51 +102,49 @@ the console's Setup page, which also clears what the running process holds in me
 
 ## How the loop works
 
-The status names below are the real ones, from `internal/core/types.go`.
+Every report moves through the statuses below. The names are the real ones from
+`internal/core/types.go`, and the console shows each one live.
 
-```
-  report --> triaging --> reproducing --> fixing --> verifying --> regressing --> proven
-             (agent)        (Kane)       (agent)      (Kane)        (Kane)
-                |              |                         |              |
-    decision    |       exit 0 | not reproduced   exit 1 | still   exit | an earlier
-    "ask"       |              v                         | fails   1    | fix broke
-                |         needs_info                     |              |
-                |      (one question to                  v              v
-                +---->  the reporter)           +----------------------------+
-                              |                 |  attempt n+1: the agent is |
-                              | reply,          |  given Kane's newest run   |
-                              |  re-queued      |  and tries again           |
-                              v                 +----------------------------+
-                        queued, triaging                   |         |
-                                                 fixing <--+         | after 3
-                                                                     | attempts
-                                                                     v
-                                                     restore the baseline snapshot,
-                                                              escalated
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> queued: report filed
+    queued --> triaging
+    triaging --> reproducing: check written
+    triaging --> needs_info: too vague to check
+    reproducing --> fixing: Kane fails, the bug is real
+    reproducing --> awaiting_approval: Kane fails, autonomy ask
+    awaiting_approval --> fixing: you approve
+    reproducing --> needs_info: Kane passes
+    needs_info --> queued: the reporter answers
+    needs_info --> unreproduced: two rounds, no bug
+    fixing --> verifying: patch applied
+    fixing --> reproducing: check revised, once
+    verifying --> fixing: still fails, next attempt
+    verifying --> regressing: the check passes
+    regressing --> fixing: an earlier fix broke
+    regressing --> proven: every earlier check holds
+    fixing --> escalated: third failed attempt
+    proven --> [*]
+    unreproduced --> [*]
+    escalated --> [*]
 ```
 
-- `queued` -> `triaging`: the agent reads the report and answers `check` or `ask`. `ask`
-  becomes `needs_info` with one question for the reporter; an answer re-queues the report,
-  and triage runs again with the whole conversation in the prompt.
-- `reproducing`: Kane runs the check. **A failure is the good outcome** - it means the bug
-  is real and reproduced, with evidence. A pass means not reproduced, so the reporter gets
-  the follow-up question the agent prepared. Two unanswered or unreproduced rounds close
-  the report as `unreproduced`.
-- `fixing`: the target directory is snapshotted, then the agent patches it. If it changed
-  nothing, the attempt is `no_change`. If the check itself was wrong it may answer
-  `revise_check` once, before any patch has landed, and the new check goes back to
-  `reproducing`. `give_up` escalates.
-- `verifying`: Kane runs **the same check** against the patched app. Still failing means
-  the next attempt gets this run's evidence in its prompt.
-- `regressing`: Kane re-runs the saved check of **every earlier proven fix**. One failure
-  means the attempt `regressed` and does not count as a fix.
-- `proven`: the check is saved as a suite test, the patch is written to
-  `.fixpoint/artifacts/<report>/fix.patch`, and `Proof` records the failing run, the
-  passing run, the whole diff from baseline, and the before and after screenshots.
-- Three attempts without a pass: the baseline snapshot is restored, so the app is exactly
-  as it was, and the status is `escalated` with everything Kane and the agent found.
-- With `--autonomy ask`, a reproduced report waits in `awaiting_approval` until you press
-  "Approve the fix".
+| Status | Who works | What happens | What moves it on |
+|---|---|---|---|
+| `triaging` | Claude Code | Reads the report, the conversation and your source, then writes one browser check, or decides to ask. | A check goes to Kane. A question goes to the reporter. |
+| `reproducing` | Kane CLI | Runs the check in Chrome for the first time. **A failure is the good outcome**: the bug is real, with evidence. | Fails: on to fixing. Passes: the reporter gets the agent's follow-up question. |
+| `needs_info` | the reporter | Answers one question in the widget or on the status page. | An answer queues the report again. Two rounds without a reproduction close it as `unreproduced`. |
+| `fixing` | Claude Code | The app is snapshotted, then patched. The prompt carries Kane's steps, captured values, failure record and console errors. | A patch goes to Kane. A wrong check may be revised once, before any patch lands. |
+| `verifying` | Kane CLI | Runs **the same check** against the patched app. | Still failing: the next attempt gets this run as evidence. Passing: on to regressing. |
+| `regressing` | Kane CLI | Replays the saved check of **every earlier proven fix**. | One failure means the patch broke something, so it does not count. All pass: proven. |
+| `proven` | nobody | The check joins the suite and the patch is saved as `fix.patch`. The case file shows the failing run, the patch and the passing run side by side. | Done. |
+| `escalated` | you | Three attempts did not hold, or the agent gave up. The baseline is restored, so the app is exactly as it was. | Done, with everything Kane and the agent found attached. |
+
+Two more statuses exist. `awaiting_approval` holds a reproduced report until you press
+"Approve the fix", when Fixpoint runs with `--autonomy ask`. `error` means a tool stopped the
+run, such as a missing sign-in or a timeout. Its message says what to do, and the report
+can be retried.
 
 One report is worked on at a time, because fixes change one working tree. The rest queue.
 
