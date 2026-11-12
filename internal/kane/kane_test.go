@@ -288,3 +288,37 @@ func TestCLIKillsGroupOnCancel(t *testing.T) {
 		time.Sleep(20 * time.Millisecond)
 	}
 }
+
+// TestReadPackKane010 uses the layout Kane CLI 0.10.3 really writes: JPEG
+// screenshots, a step.json per step and one failure.yaml at the root.
+func TestReadPackKane010(t *testing.T) {
+	dir := t.TempDir()
+	pack := filepath.Join(dir, "run.evidence")
+	buildPack(t, pack, map[string]string{
+		"failure.yaml":                        "totals:\n  failures: 1\nfailures:\n  - step: 3\n    reason: total stayed at 469\n",
+		"run.yaml":                            "status: finalized\n",
+		"tests/t1/steps/1-0-1/screenshot.jpg": "JPG1",
+		"tests/t1/steps/1-0-1/step.json":      `{"kind":"navigate","status":"passed","ordinal":1}`,
+		"tests/t1/steps/3-0-3/screenshot.jpg": "JPG3",
+		"tests/t1/steps/3-0-3/step.json":      `{"kind":"assert","status":"failed","ordinal":3}`,
+	})
+	dest := filepath.Join(dir, "out")
+	ev, err := ReadPack(pack, dest, "/artifacts/r_1/run_1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ev.Shots) != 2 || ev.Shots[0].URL != "/artifacts/r_1/run_1/step-1.jpg" || ev.Shots[1].Failed != true || ev.Shots[0].Failed {
+		t.Fatalf("shots %+v", ev.Shots)
+	}
+	if !strings.Contains(ev.FailureText, "total stayed at 469") {
+		t.Fatalf("failure text %q", ev.FailureText)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dest, "step-3.jpg")); string(b) != "JPG3" {
+		t.Fatalf("step-3.jpg holds %q", b)
+	}
+	// A passing run's root failure.yaml lists nothing and is not a failure.
+	buildPack(t, pack, map[string]string{"failure.yaml": "totals:\n  failures: 0\nfailures: []\n"})
+	if ev, _ := ReadPack(pack, dest, "/a"); ev.FailureText != "" {
+		t.Fatalf("passing run got failure text %q", ev.FailureText)
+	}
+}

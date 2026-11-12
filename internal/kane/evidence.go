@@ -26,7 +26,9 @@ const (
 	MaxConsoleLines = 20
 )
 
-var stepDir = regexp.MustCompile(`^tests/[^/]+/steps/(\d+)-[^/]+/(screenshot\.png|annotated\.png|failure\.yaml)$`)
+// Kane 0.10 writes screenshot.jpg and a step.json per step, and one
+// failure.yaml at the root; older packs used PNGs and per-step failure.yaml.
+var stepDir = regexp.MustCompile(`^tests/[^/]+/steps/(\d+)-[^/]+/((screenshot|annotated)\.(?:png|jpe?g)|failure\.yaml|step\.json)$`)
 var consoleLog = regexp.MustCompile(`^tests/[^/]+/logs/[^/]+-console\.ndjson$`)
 var hintLine = regexp.MustCompile("evidence serve ([^`\\s]+)")
 
@@ -69,12 +71,27 @@ func ReadPack(packPath, destDir, urlPrefix string) (*core.Evidence, error) {
 			consoles = append(consoles, consoleFile{f.Name, f})
 			continue
 		}
+		if f.Name == "failure.yaml" {
+			if b, err := readLimited(f, MaxFailureBytes); err == nil && rootFailures(b) && ev.FailureText == "" {
+				ev.FailureText = string(b)
+			}
+			continue
+		}
 		m := stepDir.FindStringSubmatch(f.Name)
 		if m == nil {
 			continue
 		}
 		ord, _ := strconv.Atoi(m[1])
 		switch m[2] {
+		case "step.json":
+			if b, err := readLimited(f, 64<<10); err == nil {
+				var st struct {
+					Status string `json:"status"`
+				}
+				if json.Unmarshal(b, &st) == nil && stepStatus(st.Status) == "failed" {
+					failedStep[ord] = true
+				}
+			}
 		case "failure.yaml":
 			failedStep[ord] = true
 			if ev.FailureText == "" {
@@ -94,14 +111,16 @@ func ReadPack(packPath, destDir, urlPrefix string) (*core.Evidence, error) {
 				s = &core.Shot{Step: ord}
 				shots[ord] = s
 			}
-			name := fmt.Sprintf("step-%d.png", ord)
-			if m[2] == "annotated.png" {
-				name = fmt.Sprintf("step-%d-annotated.png", ord)
+			ext := strings.ToLower(path.Ext(m[2]))
+			annotated := m[3] == "annotated"
+			name := fmt.Sprintf("step-%d%s", ord, ext)
+			if annotated {
+				name = fmt.Sprintf("step-%d-annotated%s", ord, ext)
 			}
 			if err := extract(f, filepath.Join(destDir, name)); err != nil {
 				continue
 			}
-			if m[2] == "annotated.png" {
+			if annotated {
 				s.AnnotatedURL = urlPrefix + "/" + name
 			} else {
 				s.URL = urlPrefix + "/" + name
@@ -131,6 +150,18 @@ func ReadPack(packPath, destDir, urlPrefix string) (*core.Evidence, error) {
 		ev.ConsoleErrors = append(ev.ConsoleErrors, consoleErrors(c.f, MaxConsoleLines-len(ev.ConsoleErrors))...)
 	}
 	return ev, nil
+}
+
+// rootFailures reports whether a root failure.yaml lists any failure. Kane
+// writes one on every run, with "failures: []" when nothing failed.
+func rootFailures(b []byte) bool {
+	for _, l := range strings.Split(string(b), "\n") {
+		// Only the top-level key; "totals:" has an indented "failures:" count.
+		if strings.HasPrefix(l, "failures:") {
+			return strings.TrimSpace(strings.TrimPrefix(l, "failures:")) != "[]"
+		}
+	}
+	return false
 }
 
 func readLimited(f *zip.File, max int64) ([]byte, error) {
