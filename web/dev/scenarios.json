@@ -1,0 +1,84 @@
+{
+  "scenarios": [
+    {
+      "id": "stale-total",
+      "report_keywords": [
+        "remov",
+        "total"
+      ],
+      "title": "Total stays the same after removing a pouch",
+      "objective": "Go to {{url}}. Click the \"Add Masala Chai to the cart\" button. Click the \"Add Elaichi Chai to the cart\" button. Click the \"Remove Elaichi Chai from the cart\" button. Store the amount shown next to the \"Total\" label as 'observed'. Verify the order total shows ₹289.",
+      "expected": "Removing a pouch recomputes the bill, so the order total drops to ₹289.",
+      "question": "Which pouch did you remove, and what total did the page show afterwards?",
+      "file": "js/cart.js",
+      "buggy": "      const lines = state.lines.filter((line) => line.id !== id);\n      state = { ...state, lines };\n      persist();\n      emit();",
+      "fixed": "      commit({ ...state, lines: state.lines.filter((line) => line.id !== id) });",
+      "observed": "The order total still shows ₹469 after Elaichi Chai is removed.",
+      "root_cause": "removeItem() in js/cart.js writes the new lines straight into state and calls persist() and emit() itself instead of going through commit(), so priceCart() never runs again and subtotal, delivery and total keep the values from before the removal."
+    },
+    {
+      "id": "coupon-case",
+      "report_keywords": [
+        "coupon",
+        "chai10"
+      ],
+      "title": "Coupon code is rejected unless it is typed in capitals",
+      "objective": "Go to {{url}}. Click the \"Add Elaichi Chai to the cart\" button. Click the \"Add Nimbu Pudina to the cart\" button. Type \"chai10\" into the \"Coupon code\" field. Click the \"Apply coupon\" button. Store the amount shown next to the \"Total\" label as 'observed'. Verify the order total shows ₹310.",
+      "expected": "A coupon code is matched without regard to case or stray spaces, so chai10 takes 10% off.",
+      "question": "What did you type into the coupon box, exactly as you typed it?",
+      "file": "js/coupons.js",
+      "buggy": "  const coupon = COUPONS.find((entry) => entry.code === code);",
+      "fixed": "  const wanted = code.trim().toUpperCase();\n  const coupon = COUPONS.find((entry) => entry.code === wanted);",
+      "observed": "The coupon box says \"chai10\" is not a valid coupon code and the total stays ₹340.",
+      "root_cause": "lookupCoupon() in js/coupons.js compares the reporter's raw input with the stored code, so anything but an exact CHAI10 in capitals with no surrounding spaces is turned away."
+    },
+    {
+      "id": "free-delivery-threshold",
+      "report_keywords": [
+        "delivery",
+        "499"
+      ],
+      "title": "A ₹499 order is still charged ₹40 delivery",
+      "objective": "Go to {{url}}. Click the \"Add Masala Chai to the cart\" button. Click the \"Add Kadak Assam to the cart\" button. Store the amount shown next to the \"Delivery\" label as 'observed'. Verify the order total shows ₹499.",
+      "expected": "Delivery is free from ₹499 upwards, so a ₹499 order pays no delivery and the total is ₹499.",
+      "question": "What was in your cart, and what delivery charge did the bill show?",
+      "file": "js/pricing.js",
+      "buggy": "  return subtotal > FREE_DELIVERY_FROM ? 0 : DELIVERY_FEE;",
+      "fixed": "  return subtotal >= FREE_DELIVERY_FROM ? 0 : DELIVERY_FEE;",
+      "observed": "The bill shows ₹40 delivery and a total of ₹539 on a ₹499 order.",
+      "root_cause": "deliveryFor() in js/pricing.js tests subtotal > FREE_DELIVERY_FROM, so a cart of exactly ₹499 misses the free-delivery band the page promises and is charged the ₹40 fee."
+    },
+    {
+      "id": "qty-below-one",
+      "report_keywords": [
+        "minus",
+        "quantit"
+      ],
+      "title": "Minus button takes the quantity below one",
+      "objective": "Go to {{url}}. Click the \"Add Adrak Chai to the cart\" button. Click the \"Remove one Adrak Chai\" button. Store the text of the \"Your order\" panel as 'observed'. Verify the order panel shows \"Your cart is empty. Add a pouch from the menu.\"",
+      "expected": "At a quantity of one the minus button removes the pouch, and no quantity ever goes below one.",
+      "question": "Which pouch were you reducing, and what quantity did the cart show afterwards?",
+      "file": "js/cart.js",
+      "buggy": "      const lines = state.lines.map((line) => (line.id === id ? { ...line, qty: line.qty + delta } : line));",
+      "fixed": "      const lines = state.lines\n        .map((line) => (line.id === id ? { ...line, qty: line.qty + delta } : line))\n        .filter((line) => line.qty > 0);",
+      "observed": "The cart still lists Adrak Chai with a quantity of 0.",
+      "root_cause": "changeQty() in js/cart.js adds the delta with no floor and keeps the line whatever the result, so the minus button leaves a pouch at 0 and then at -1, which feeds a negative line total into priceCart()."
+    },
+    {
+      "id": "search-case",
+      "report_keywords": [
+        "search",
+        "kahwa"
+      ],
+      "title": "Searching in lower case finds nothing",
+      "objective": "Go to {{url}}. Type \"kahwa\" into the \"Search the menu\" field. Store the text of the menu as 'observed'. Verify the menu shows a card for \"Kashmiri Kahwa\" priced ₹320.",
+      "expected": "Search ignores case, so kahwa finds Kashmiri Kahwa on the menu.",
+      "question": "What did you type into the search box, and which tea did you expect to see?",
+      "file": "js/search.js",
+      "buggy": "  return text.normalize(\"NFKD\").replace(/\\p{M}/gu, \"\").replace(/\\s+/g, \" \").trim();",
+      "fixed": "  return text.normalize(\"NFKD\").replace(/\\p{M}/gu, \"\").replace(/\\s+/g, \" \").trim().toLowerCase();",
+      "observed": "The menu shows \"No teas found for \"kahwa\".\" instead of Kashmiri Kahwa.",
+      "root_cause": "fold() in js/search.js normalises and trims the text but never lower-cases it, so searchProducts() compares a lower-case query against capitalised product names and matches nothing."
+    }
+  ]
+}
