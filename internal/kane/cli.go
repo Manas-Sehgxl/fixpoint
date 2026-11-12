@@ -85,7 +85,12 @@ func (c *CLI) Args(ctx context.Context, req Request) []string {
 	args := append([]string{}, c.PrefixArgs...)
 	timeout := strconv.Itoa(c.TimeoutS)
 	if req.TestFile != "" {
-		args = append(args, "testmd", "run", req.TestFile, "--agent")
+		// Kane runs inside WorkDir, so a path relative to ours would miss.
+		file := req.TestFile
+		if abs, err := filepath.Abs(file); err == nil {
+			file = abs
+		}
+		args = append(args, "testmd", "run", file, "--agent")
 		if c.Headless {
 			args = append(args, "--headless")
 		}

@@ -89,9 +89,11 @@ func setup(ctx context.Context, cfg config.Config, dataDir string, stubs, seed b
 	a.target = pipeline.Target{Name: cfg.Target.Name, URL: cfg.Target.URL, Dir: cfg.Target.Dir,
 		Notes: cfg.Target.Notes, RestartCmd: cfg.Target.RestartCmd, HealthURL: cfg.Target.HealthURL}
 	if a.demo {
-		// Only `up` and a reset re-seed: doctor must not disturb a shop
-		// that another Fixpoint is working on.
-		if seed {
+		// Only `up` and a reset seed: doctor must not disturb a shop that
+		// another Fixpoint is working on. `up` keeps a shop that is already
+		// there, because the proven reports and the suite describe its
+		// patched files; `demo reset` starts both over.
+		if seed && !exists(filepath.Join(a.paths.shop, "index.html")) {
 			if err := demo.Seed(web.Shop(), a.paths.shop, a.origin); err != nil {
 				return nil, err
 			}
@@ -278,4 +280,9 @@ func (a *app) resetDemo() error {
 	}
 	a.bus.Publish(core.Event{Type: core.EvSystemChanged, Text: "The demo was reset: the shop, the reports and the suite are back to the start."})
 	return nil
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

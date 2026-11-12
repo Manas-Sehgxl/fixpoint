@@ -348,3 +348,11 @@ func TestFindTestFile(t *testing.T) {
 		t.Fatalf("got %q, want %q", got, old)
 	}
 }
+
+func TestArgsTestFileIsAbsolute(t *testing.T) {
+	c := &CLI{WorkDir: ".fixpoint/kane", TimeoutS: 60}
+	args := c.Args(context.Background(), Request{TestFile: ".fixpoint/kane/.testmuai/tests/fp-1-v1_test.md"})
+	if len(args) < 3 || args[0] != "testmd" || !filepath.IsAbs(args[2]) {
+		t.Fatalf("args %q: want testmd run <absolute path>, since Kane runs inside WorkDir", args)
+	}
+}
