@@ -29,8 +29,28 @@ the result stops changing.
 </p>
 <p align="center"><sub>From the project page. The patch is the real fix for one of the demo shop's planted bugs, and the terminal shows a real Kane CLI run.</sub></p>
 
+## For judges
+
+**See it in 30 seconds, no accounts:** `go run ./cmd/fixpoint up --stubs`, then open
+<http://localhost:7777> and <http://localhost:4000>. Simulated runners stand in for Kane and
+Claude Code. The whole loop runs and the shop really gets patched, but every page says the
+runs are simulated, because nothing is verified that way.
+
+**The real loop:** you need Kane CLI signed in (`kane-cli login`, free with a TestMu AI
+account), Claude Code signed in, and Chrome. Claude Code can also run on an Anthropic API
+key: set `ANTHROPIC_API_KEY` before `go run ./cmd/fixpoint up`. Then follow
+[the first two minutes](#the-first-two-minutes). `go run ./cmd/fixpoint doctor` says what is
+missing.
+
+**The demo video** shows one unbroken real session: Kane failing the check on the bug,
+Claude Code's patch, and Kane passing the same check.
+
+**Dates:** the repository was created on 12 November 2026 IST; the first commit is at
+01:37 IST that day. The history is as it was written.
+
 ## Contents
 
+- [For judges](#for-judges)
 - [Quick start](#quick-start)
 - [The first two minutes](#the-first-two-minutes)
 - [How the loop works](#how-the-loop-works)
