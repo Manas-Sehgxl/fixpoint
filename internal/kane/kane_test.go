@@ -269,12 +269,22 @@ func TestCLIKillsGroupOnCancel(t *testing.T) {
 	}
 	b, _ := os.ReadFile(pidFile)
 	pid := strings.TrimSpace(string(b))
-	if pid != "" {
-		if _, err := os.Stat("/proc/" + pid); err == nil {
-			st, _ := os.ReadFile("/proc/" + pid + "/stat")
-			if !strings.Contains(string(st), ") Z") {
-				t.Errorf("grandchild %s still running", pid)
-			}
+	if pid == "" {
+		return
+	}
+	// SIGKILL is delivered asynchronously: Wait returns once the shell is
+	// reaped, but the grandchild can still be tearing down for a moment.
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if _, err := os.Stat("/proc/" + pid); err != nil {
+			return // gone
 		}
+		if st, _ := os.ReadFile("/proc/" + pid + "/stat"); strings.Contains(string(st), ") Z") {
+			return // zombie, waiting to be reaped
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("grandchild %s still running", pid)
+		}
+		time.Sleep(20 * time.Millisecond)
 	}
 }
