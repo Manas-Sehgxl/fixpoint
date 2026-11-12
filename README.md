@@ -326,7 +326,12 @@ above and prints what failed; it also works as a Claude Code Stop hook
 (`.claude/settings.json`) so an agent editing the console is told when it broke the board.
 The hook skips itself when `FIXPOINT_AGENT=1`, so Fixpoint's own agent can never trigger
 it, skips when nothing is listening and when Kane CLI is absent, and gives up after three
-blocks.
+blocks. Point it at another console with `FIXPOINT_URL` and `FIXPOINT_SHOP_URL` (the
+checks' `localhost:7777` and `localhost:4000` are rewritten to them), and use `127.0.0.1`
+rather than `localhost` where `localhost` resolves to IPv6. The check that files a report
+needs `--stubs`, so it is skipped against real runners. Claude Code runs project hooks once
+the folder is trusted; in a fresh clone, open `claude` there once, or pass the hook with
+`--settings`.
 
 ## Honesty, and what `--stubs` is not
 

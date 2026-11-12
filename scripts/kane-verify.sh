@@ -133,6 +133,7 @@ for file in "$checks"/*.md; do
   # start a real fix, so it is skipped there.
   if field "$file" 'Needs: ' | grep -q -- '--stubs' && [ "$simulated" = "false" ]; then
     note "kane-verify: $name needs --stubs and this console runs real tools; skipping it."
+    total=$((total - 1))
     continue
   fi
   if [ -z "$obj" ]; then
