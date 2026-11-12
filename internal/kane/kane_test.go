@@ -322,3 +322,29 @@ func TestReadPackKane010(t *testing.T) {
 		t.Fatalf("passing run got failure text %q", ev.FailureText)
 	}
 }
+
+// TestFindTestFile picks the recording this run wrote, even when Kane had to
+// add a suffix because an older recording held the name.
+func TestFindTestFile(t *testing.T) {
+	work := t.TempDir()
+	dir := filepath.Join(work, ".testmuai", "tests")
+	os.MkdirAll(dir, 0o755)
+	old := filepath.Join(dir, "fp-1-r1_test.md")
+	os.WriteFile(old, []byte("old check"), 0o644)
+	past := time.Now().Add(-2 * time.Hour)
+	os.Chtimes(old, past, past)
+	start := time.Now()
+	if got := FindTestFile(work, "fp-1-r1", start); got != "" {
+		t.Fatalf("an older recording was returned: %s", got)
+	}
+	fresh := filepath.Join(dir, "fp-1-r1-2_test.md")
+	os.WriteFile(fresh, []byte("this run"), 0o644)
+	if got := FindTestFile(work, "fp-1-r1", start); got != fresh {
+		t.Fatalf("got %q, want %q", got, fresh)
+	}
+	os.Remove(fresh)
+	os.WriteFile(old, []byte("rewritten by this run"), 0o644)
+	if got := FindTestFile(work, "fp-1-r1", start); got != old {
+		t.Fatalf("got %q, want %q", got, old)
+	}
+}

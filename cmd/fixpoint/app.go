@@ -239,7 +239,9 @@ func (a *app) resetDemo() error {
 		if err := a.store.Reset(); err != nil {
 			return err
 		}
-		for _, d := range []string{a.paths.artifacts, a.paths.snapshots} {
+		// Kane's recorded tests go too: report numbers start again at 1, and an
+		// old recording under a reused name would be replayed as the new check.
+		for _, d := range []string{a.paths.artifacts, a.paths.snapshots, filepath.Join(a.paths.kane, ".testmuai", "tests")} {
 			if err := os.RemoveAll(d); err != nil {
 				return fmt.Errorf("clear %s: %w", d, err)
 			}

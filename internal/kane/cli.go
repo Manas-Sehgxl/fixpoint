@@ -176,10 +176,7 @@ func (c *CLI) Run(ctx context.Context, req Request, onStep func([]core.Step)) Re
 		}
 	}
 	if req.Name != "" && !testmd {
-		tf := filepath.Join(c.WorkDir, ".testmuai", "tests", req.Name+"_test.md")
-		if isFile(tf) {
-			res.TestFile = tf
-		}
+		res.TestFile = FindTestFile(c.WorkDir, req.Name, start)
 	}
 	res.Run = run
 	return res
@@ -247,4 +244,15 @@ func firstLine(s string) string {
 		s = s[:i]
 	}
 	return strings.TrimSpace(s)
+}
+
+// FindTestFile returns the replayable test Kane recorded for a run named name.
+// Kane writes <name>_test.md, or <name>-2_test.md and so on when that name is
+// taken, so the newest of those written since the run started is the one; an
+// older file of the same name is a different check and is never returned.
+func FindTestFile(workDir, name string, started time.Time) string {
+	dir := filepath.Join(workDir, ".testmuai", "tests")
+	matches, _ := filepath.Glob(filepath.Join(dir, name+"_test.md"))
+	more, _ := filepath.Glob(filepath.Join(dir, name+"-*_test.md"))
+	return newest(append(matches, more...), started.Add(-2*time.Second))
 }
