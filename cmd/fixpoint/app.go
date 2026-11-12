@@ -68,11 +68,12 @@ type app struct {
 	// scenarios is the stub scenarios file in use, empty when none was found.
 	scenarios string
 
-	healthMu  sync.Mutex
-	healthAt  time.Time
-	kaneInfo  core.ToolInfo
-	agentInfo core.ToolInfo
-	reachable bool
+	healthMu   sync.Mutex
+	healthAt   time.Time
+	healthBusy bool
+	kaneInfo   core.ToolInfo
+	agentInfo  core.ToolInfo
+	reachable  bool
 }
 
 // setup builds the app: data directories, the demo shop when there is no
@@ -179,24 +180,45 @@ func (a *app) snippet() string {
 	return fmt.Sprintf(`<script src="%s/widget.js" data-fixpoint="%s" defer></script>`, a.origin, a.origin)
 }
 
-// health probes Kane, the agent and the target, at most every few seconds.
+// health reports Kane, the agent and the target. Probing them runs the real
+// binaries (kane-cli whoami can take seconds), so only the first call waits:
+// later calls get the last answer at once, and a stale one is refreshed in the
+// background, one refresh at a time, without holding the lock while it probes.
 func (a *app) health(ctx context.Context) (core.ToolInfo, core.ToolInfo, bool) {
 	a.healthMu.Lock()
-	defer a.healthMu.Unlock()
-	if time.Since(a.healthAt) < 5*time.Second {
+	if a.healthAt.IsZero() {
+		defer a.healthMu.Unlock()
+		a.kaneInfo, a.agentInfo, a.reachable = a.probeHealth(ctx)
+		a.healthAt = time.Now()
 		return a.kaneInfo, a.agentInfo, a.reachable
 	}
-	a.kaneInfo = a.kane.Health(ctx)
-	if a.stubs {
-		a.kaneInfo.Name = "Kane CLI (simulated)"
+	k, ag, reachable := a.kaneInfo, a.agentInfo, a.reachable
+	if time.Since(a.healthAt) > 30*time.Second && !a.healthBusy {
+		a.healthBusy = true
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+			nk, nag, nr := a.probeHealth(ctx)
+			a.healthMu.Lock()
+			a.kaneInfo, a.agentInfo, a.reachable, a.healthAt, a.healthBusy = nk, nag, nr, time.Now(), false
+			a.healthMu.Unlock()
+		}()
 	}
-	a.agentInfo = a.agent.Health(ctx)
+	a.healthMu.Unlock()
+	return k, ag, reachable
+}
+
+// probeHealth runs the probes and returns what they found.
+func (a *app) probeHealth(ctx context.Context) (core.ToolInfo, core.ToolInfo, bool) {
+	k := a.kane.Health(ctx)
 	if a.stubs {
-		a.agentInfo.Name = a.agent.Name() + " (simulated)"
+		k.Name = "Kane CLI (simulated)"
 	}
-	a.reachable = doctor.Reachable(ctx, firstNonEmpty(a.target.HealthURL, a.target.URL))
-	a.healthAt = time.Now()
-	return a.kaneInfo, a.agentInfo, a.reachable
+	ag := a.agent.Health(ctx)
+	if a.stubs {
+		ag.Name = a.agent.Name() + " (simulated)"
+	}
+	return k, ag, doctor.Reachable(ctx, firstNonEmpty(a.target.HealthURL, a.target.URL))
 }
 
 func firstNonEmpty(s ...string) string {

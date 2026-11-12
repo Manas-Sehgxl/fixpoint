@@ -16,7 +16,10 @@
 # exits non-zero when a check failed.
 #
 # Environment:
-#   FIXPOINT_URL   console origin to check (default http://127.0.0.1:7777)
+#   FIXPOINT_URL   console origin to check (default http://127.0.0.1:7777); the
+#                  checks name http://localhost:7777 and are pointed here instead
+#   FIXPOINT_SHOP_URL  demo shop origin (default http://127.0.0.1:4000); the checks
+#                  name http://localhost:4000 and are pointed here instead
 #   FIXPOINT_AGENT set to 1 by Fixpoint around its own agent calls; the hook
 #                  then does nothing at all, so Fixpoint's agent cannot drive
 #                  Fixpoint's own verification
@@ -28,6 +31,7 @@ set -u
 
 MAX_BLOCKS=3
 URL=${FIXPOINT_URL:-http://127.0.0.1:7777}
+SHOP_URL=${FIXPOINT_SHOP_URL:-http://127.0.0.1:4000}
 KANE=${KANE_BIN:-kane-cli}
 TIMEOUT=${KANE_TIMEOUT:-240}
 
@@ -73,10 +77,12 @@ if [ ! -d "$checks" ]; then
   allow
 fi
 
-if ! curl -fs -m 5 -o /dev/null "$URL/api/system"; then
+if ! curl -fs -m 20 -o /dev/null "$URL/api/system"; then
   note "kane-verify: nothing is answering at $URL; start Fixpoint (go run ./cmd/fixpoint up) first. Skipping."
   allow
 fi
+
+simulated=$(curl -fs -m 20 "$URL/api/system" | grep -o '"simulated": *[a-z]*' | sed -n '1s/.*: *//p')
 
 if ! command -v "$KANE" >/dev/null 2>&1; then
   note "kane-verify: $KANE is not installed, so nothing can be verified; skipping."
@@ -120,6 +126,15 @@ for file in "$checks"/*.md; do
   obj=$(objective "$file")
   [ -n "$start" ] || start=$URL
   [ -n "$title" ] || title=$name
+  # The checks are written for the default ports; point them at this console and shop.
+  start=$(printf '%s' "$start" | sed -e "s|http://localhost:7777|$URL|g" -e "s|http://localhost:4000|$SHOP_URL|g")
+  obj=$(printf '%s' "$obj" | sed -e "s|http://localhost:7777|$URL|g" -e "s|http://localhost:4000|$SHOP_URL|g")
+  # A check that needs --stubs files a real report; against real runners it would
+  # start a real fix, so it is skipped there.
+  if field "$file" 'Needs: ' | grep -q -- '--stubs' && [ "$simulated" = "false" ]; then
+    note "kane-verify: $name needs --stubs and this console runs real tools; skipping it."
+    continue
+  fi
   if [ -z "$obj" ]; then
     note "kane-verify: $name has no objective paragraph; skipping it."
     continue
