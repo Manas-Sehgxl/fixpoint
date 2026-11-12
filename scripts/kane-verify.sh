@@ -101,6 +101,12 @@ session=$(printf '%s' "$payload" | sed -n 's/.*"session_id" *: *"\([^"]*\)".*/\1
 [ -n "$session" ] || session=manual
 counter=/tmp/fixpoint-kane-verify-$(printf '%s' "$session" | tr -c 'A-Za-z0-9_-' '_').count
 
+work=${TMPDIR:-/tmp}/fixpoint-kane-verify
+mkdir -p "$work" || {
+  note "kane-verify: could not create $work; skipping."
+  allow
+}
+
 failures=
 failed=0
 total=0
@@ -119,7 +125,9 @@ for file in "$checks"/*.md; do
     continue
   fi
   note "kane-verify: running $name"
-  out=$(KANE_CLI_USER_AGENT=fixpoint "$KANE" run "$obj" --agent --headless \
+  # Kane gets a working directory of its own, so its .testmuai/ and its
+  # evidence packs do not land in the repo.
+  out=$(cd "$work" && KANE_CLI_USER_AGENT=fixpoint "$KANE" run "$obj" --agent --headless \
     --url "$start" --timeout "$TIMEOUT" --name "fpself-$name" </dev/null 2>&1)
   code=$?
   case $code in
