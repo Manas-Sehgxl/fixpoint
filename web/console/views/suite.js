@@ -3,7 +3,7 @@
 
 import { h, reconcile, rich } from '../dom.js';
 import { mark } from '../marks.js';
-import { duration, ago } from '../format.js';
+import { duration, ago, reasonText } from '../format.js';
 
 const RESULT = { passed: 'Passed', failed: 'Failed', error: 'Could not run', timeout: 'Timed out', running: 'Running' };
 
@@ -27,7 +27,7 @@ function testRow(t, live) {
       h('span', { class: 'test-words' }, now ? 'Running now' : lr ? `${RESULT[lr.status] || lr.status} ` : words,
         !now && lr ? h('time', { datetime: lr.at, dataset: { ago: lr.at } }, ago(lr.at)) : null),
       !now && lr ? h('span', { class: 'quiet' }, `${duration(lr.duration_s)}, ${lr.replayed ? 'replayed from its recording' : 'run fresh by Kane'}`) : null,
-      !now && lr && lr.reason && lr.status !== 'passed' ? h('span', { class: 'test-reason' }, lr.reason) : null));
+      !now && lr && lr.reason && lr.status !== 'passed' ? h('span', { class: 'test-reason' }, reasonText(lr.reason)) : null));
 }
 
 export function mount(root, ctx) {

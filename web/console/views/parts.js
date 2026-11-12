@@ -3,7 +3,7 @@
 
 import { h, reconcile, rich } from '../dom.js';
 import { mark } from '../marks.js';
-import { duration, credits, clock, humanize } from '../format.js';
+import { duration, credits, clock, humanize, reasonText } from '../format.js';
 
 /** mergeSteps combines a run's stored steps with steps seen live on the stream. */
 export function mergeSteps(run, live) {
@@ -64,9 +64,13 @@ export function runBlock(run, ctx, { heading = null } = {}) {
 
   if (run.status !== 'running') {
     const facts = [];
+    // A replayed test reports one step per heading, so the reason's step
+    // number can name a step this run never recorded. Only point at a step
+    // that is really there.
     const fs = failedStep(run.reason);
-    if (run.status === 'failed' && fs) facts.push(['Failed at', `step ${fs}`]);
-    else if (run.reason) facts.push(['Reason', humanize(run.reason)]);
+    const steps = run.steps || [];
+    if (run.status === 'failed' && fs && steps.some((st) => st.n === fs)) facts.push(['Failed at', `step ${fs}`]);
+    else if (run.reason) facts.push(['Reason', reasonText(run.reason)]);
     const values = Object.entries(run.final_state || {});
     for (const [k, v] of values) facts.push([k === 'observed' ? 'Value seen' : humanize(k), typeof v === 'string' ? v : JSON.stringify(v)]);
     if (run.duration_s) facts.push(['Took', duration(run.duration_s)]);

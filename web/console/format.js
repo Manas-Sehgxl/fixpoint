@@ -128,6 +128,18 @@ export function toolName(name) {
   return String(name || '').replace(/\s*\(simulated\)\s*$/i, '');
 }
 
+/**
+ * reasonText turns Kane's machine reason into a sentence. Kane writes
+ * "assertion_failed: @ step 7"; everything else is shown as it came.
+ */
+export function reasonText(reason) {
+  const r = String(reason || '').trim();
+  const m = r.match(/^assertion_failed:?\s*@?\s*step\s+(\d+)$/i);
+  if (m) return `The assertion at step ${m[1]} did not hold.`;
+  if (/^assertion_failed$/i.test(r)) return 'The final assertion did not hold.';
+  return humanize(r);
+}
+
 export function humanize(s) {
   const t = String(s || '').replace(/_/g, ' ');
   return t.charAt(0).toUpperCase() + t.slice(1);
