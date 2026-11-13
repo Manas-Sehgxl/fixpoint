@@ -106,7 +106,7 @@ coupon fix. Both tests passed, and only then was the report closed.
 ## For judges
 
 - **Quickest look:** the 30-second steps above. They need no accounts, and every page says the runs are simulated.
-- **The real loop:** you need [Kane CLI](https://www.npmjs.com/package/@testmuai/kane-cli) signed in (`kane-cli login`), Claude Code, and Chrome. If you do not have Claude Code, use the capped Anthropic API key in our submission notes: set it as `ANTHROPIC_API_KEY` before starting. Then run `./fixpoint doctor` to check everything, and `./fixpoint up` without `--stubs`.
+- **The real loop:** you need [Kane CLI](https://www.npmjs.com/package/@testmuai/kane-cli) signed in (`kane-cli login`), Claude Code, and Chrome. If you do not have Claude Code, it also runs on an Anthropic API key: set `ANTHROPIC_API_KEY` before starting. A capped key for judges is in the install command on our submission form. Then run `./fixpoint doctor` to check everything, and `./fixpoint up` without `--stubs`.
 - **The proof:** the real runs above, with their Test Manager links.
 - **The demo video:** shows one unbroken real session: Kane failing the check on the bug, Claude Code's fix, and Kane passing the same check.
 - **Dates:** the repository was created on 12 November 2026; the first commit is at 01:37 IST that day. The history is as it was written.
