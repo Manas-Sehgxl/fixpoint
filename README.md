@@ -2,6 +2,8 @@
 
 **Bug reports that close themselves.**
 
+[Website](https://claude.ai/artifact/FJJjSgxrRMqk6KB89puLU9) · [Download](https://github.com/Manas-Sehgxl/fixpoint/releases/tag/v0.1.0) · [Proof from real runs](#proof-from-real-runs)
+
 [![Go 1.24+](https://img.shields.io/badge/Go-1.24%2B-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![Standard library only](https://img.shields.io/badge/dependencies-none-2ea44f)](go.mod)
 [![Kane CLI](https://img.shields.io/badge/verified%20by-Kane%20CLI-8199FF)](https://www.npmjs.com/package/@testmuai/kane-cli)
