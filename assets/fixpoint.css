@@ -1,0 +1,131 @@
+/* Fixpoint's own layer over the kit: the console's navy world, its status colours, the hero film
+   and the one multiverse moment. Colours are the console's (web/console/styles.css, dark). */
+:root { --fp-pass: #4CD69E; --fp-wait: #F2B957; --fp-fail: #FF7A66;
+  --uv-acid: #B8FF2E; --uv-magenta: #FF2BC2; --uv-electric: #2D5BFF; --uv-sodium: #FFB81F; }
+
+/* the console's navy as the kit's lit ground (the ground behind every product mockup) and the mockups' tiles */
+html[data-ground="navy"] { --ground-bg: #0A1020; --ground-surface: #111A2E; --ground-ink: #E8EDF8; --ground-muted: #97A5BF; --ground-accent: #8199FF; }
+html .ui { --u-tile: #16213A; }
+
+/* the page: near-black navy, an indigo glow top right, teal bottom left, fine grain so nothing bands */
+body { background:
+  radial-gradient(1000px 560px at 90% -6%, rgb(70 100 255 / .20), transparent 62%),
+  radial-gradient(800px 500px at -4% 104%, rgb(30 180 150 / .10), transparent 60%), var(--bg); background-attachment: fixed; }
+body::after { content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: .035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.mark-fp { flex: none; margin-right: 10px; }
+
+/* statuses mean what they mean in the console: green only proven, amber only waiting */
+.ui-win__st { color: var(--fp-wait); }
+.ui-win__st.is-done { color: var(--fp-pass); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fp-pass) 30%, transparent); }
+.ui-win__st.is-done::before { opacity: 1; }
+.ui-win__st.is-you { color: var(--fp-wait); background: color-mix(in oklab, var(--fp-wait) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fp-wait) 35%, transparent); }
+.ui-win__st.is-you::before { background: var(--fp-wait); }
+.ui-win__st.is-work { color: var(--accent); }
+.ui-avatar { filter: saturate(.55); }
+
+/* buttons: a visible hover and focus everywhere */
+.btn--primary:hover { background: color-mix(in oklab, var(--action) 82%, white); }
+.btn:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* the hero film: a muted 6 s loop of the real run, and the whole run on demand
+   (the kit makes every .btn relative, so the play button needs the frame in its selector) */
+.hero__window { position: relative; }
+.hero-film { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 3; }
+.hero-film__video { height: 440px; max-width: calc(100% - 48px); aspect-ratio: 1100 / 620; object-fit: cover; border-radius: var(--u-r, 10px);
+  border: 1px solid rgb(255 255 255 / .10); box-shadow: 0 40px 90px -40px rgb(80 110 255 / .45), 0 30px 60px -30px rgb(0 0 0 / .8);
+  background: #0D1424; opacity: 0; transition: opacity 600ms ease; pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+.hero__window .hero-film .hero-film__play { position: absolute; right: 16px; top: 16px; gap: 8px; min-height: 0; padding: 8px 14px; font-size: 14px; pointer-events: auto; }
+.hero-film__len { font: 500 13px var(--font-mono); opacity: .75; }
+.hero__window > .app { transition: opacity 600ms ease; }
+.hero__window.is-film > .app { opacity: 0; }
+.hero__window.is-film .hero-film__video { opacity: 1; }
+.hero__window.is-playing .hero-film { pointer-events: auto; }
+.hero__window.is-playing .hero-film__video { pointer-events: auto; position: absolute; inset: 16px; width: calc(100% - 32px); height: calc(100% - 32px); max-width: none; aspect-ratio: auto; object-fit: contain; background: #060A15; -webkit-mask-image: none; mask-image: none; }
+.hero__window.is-playing .hero-film .hero-film__play { display: none; }
+@media (max-width: 1023px) { .hero-film__video { height: auto; width: calc(100% - 32px); } .hero__window .hero-film .hero-film__play { right: 14px; top: 14px; } }
+
+/* the multiverse moment: the panel splits into the same UI in four other universes, then snaps back */
+.uv { position: absolute; z-index: 2; pointer-events: none; opacity: 0; isolation: isolate;
+  animation: uv-split 1050ms cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0ms); }
+.uv > .app { position: absolute; inset: 0; height: 100% !important; }
+.uv::after { content: ""; position: absolute; inset: 0; border-radius: var(--u-r, 10px); pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / .18) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+.uv__label { position: absolute; top: -14px; z-index: 1; padding: 6px 10px; font: 500 12px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.uv-acid { --fx-bg: #B8FF2E; --fx-surface: #A6EA22; --fx-ink: #0B1400; --fx-muted: #2C4400; --fx-accent: #0B1400; --fx-accent-ink: #B8FF2E; }
+.uv-magenta { --fx-bg: #FF2BC2; --fx-surface: #F21AB2; --fx-ink: #1A0012; --fx-muted: #5A0A42; --fx-accent: #1A0012; --fx-accent-ink: #FF2BC2; }
+.uv-electric { --fx-bg: #2D5BFF; --fx-surface: #1E48EA; --fx-ink: #FFFFFF; --fx-muted: #C8D3FF; --fx-accent: #FFFFFF; --fx-accent-ink: #2D5BFF; }
+.uv-sodium { --fx-bg: #FFB81F; --fx-surface: #F2A90E; --fx-ink: #2A1500; --fx-muted: #5D3A06; --fx-accent: #2A1500; --fx-accent-ink: #FFB81F; }
+.uv-acid .uv__label { left: 12px; background: #0B1400; color: var(--uv-acid); }
+.uv-magenta .uv__label { right: 12px; background: #1A0012; color: var(--uv-magenta); }
+.uv-electric .uv__label { left: 12px; top: 40%; background: #FFFFFF; color: var(--uv-electric); }
+.uv-sodium .uv__label { right: 12px; top: 40%; background: #2A1500; color: var(--uv-sodium); }
+@keyframes uv-split {
+  0% { opacity: 0; transform: translate(0, 0); }
+  14% { opacity: 1; transform: translate(var(--dx), var(--dy)) rotate(var(--r)); }
+  62% { opacity: 1; transform: translate(calc(var(--dx) * 1.08), calc(var(--dy) * 1.08)) rotate(var(--r)); }
+  100% { opacity: 0; transform: translate(0, 0); }
+}
+.hero__window > .app.is-splitting { animation: uv-rgb 1050ms steps(6) both; }
+@keyframes uv-rgb {
+  0%, 100% { filter: none; }
+  20%, 60% { filter: drop-shadow(-6px 0 0 rgb(255 0 80 / .55)) drop-shadow(6px 0 0 rgb(0 220 255 / .55)); }
+  40%, 80% { filter: drop-shadow(-3px 0 0 rgb(255 0 80 / .4)) drop-shadow(3px 0 0 rgb(0 220 255 / .4)); }
+}
+
+/* the row that held, lit for a moment */
+.ui-win__row.fp-just { animation: fp-just 1400ms ease-out both; }
+@keyframes fp-just { from { background: color-mix(in oklab, var(--fp-pass) 18%, transparent); } to { background: transparent; } }
+
+/* hovering the main action: the page's edges flicker with the other universes, twice */
+.uv-edges { position: fixed; inset: 0; z-index: 80; pointer-events: none; opacity: 0;
+  box-shadow: inset 6px 0 0 var(--uv-acid), inset -6px 0 0 var(--uv-magenta), inset 0 6px 0 var(--uv-electric), inset 0 -6px 0 var(--uv-sodium); }
+html.uv-flicker .uv-edges { animation: uv-edge 700ms steps(1) both; }
+@keyframes uv-edge { 0% { opacity: .9; } 20% { opacity: 0; } 50% { opacity: .6; } 70%, 100% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .uv, .uv-edges { display: none; }
+  .hero__window > .app.is-splitting { animation: none; }
+  .hero__window > .app, .hero-film__video { transition: opacity 300ms ease; }
+}
+
+/* "holds" is the proven state, so it reads in the proven green, not the interactive indigo */
+#promise strong .mo-w.is-on { color: var(--fp-pass); }
+@media (prefers-reduced-motion: reduce) { #promise strong .mo-w { color: var(--fp-pass); } }
+
+/* moving to another section: the nav's rim flashes once with the other universes (the headings stay at rest) */
+html header.nav.is-condensed > .nav__bar.fp-jump::before { animation: fp-rim 14s linear infinite, fp-flash 520ms steps(4) both; }
+html header.nav.is-condensed > .nav__bar.fp-jump { box-shadow: 0 20px 44px -24px rgb(0 0 0 / .85), -8px 0 26px -6px rgb(184 255 46 / .45), 8px 0 26px -6px rgb(255 43 194 / .45), 0 6px 26px -8px rgb(45 91 255 / .5); }
+@keyframes fp-flash { 0% { opacity: 1; filter: saturate(1.8) brightness(1.3); } 50% { opacity: .4; } 100% { opacity: .65; filter: none; } }
+
+/* The nav: a thin rim of the other universes on the floating bar, a hairline under the full one,
+   and the page's progress drawn through all four colours. */
+@property --fp-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+html header.nav > .nav__bar::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: conic-gradient(from var(--fp-a), var(--uv-acid), var(--uv-electric), var(--uv-magenta), var(--uv-sodium), var(--uv-acid));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity 400ms ease; animation: fp-rim 14s linear infinite; }
+html header.nav.is-condensed > .nav__bar::before { opacity: .65; }
+html header.nav.is-condensed > .nav__bar { box-shadow: 0 20px 44px -24px rgb(0 0 0 / .85), 0 0 32px -8px rgb(45 91 255 / .35),
+  -18px 0 34px -16px rgb(184 255 46 / .22), 18px 0 34px -16px rgb(255 43 194 / .22); }
+html header.nav::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; pointer-events: none; opacity: .45;
+  background: linear-gradient(90deg, transparent, var(--uv-acid) 20%, var(--uv-electric) 40%, var(--uv-magenta) 60%, var(--uv-sodium) 80%, transparent); }
+html header.nav.is-condensed::after { opacity: 0; }
+html .nav__progress { background: linear-gradient(90deg, var(--uv-acid), var(--uv-electric), var(--uv-magenta), var(--uv-sodium)); }
+@keyframes fp-rim { to { --fp-a: 360deg; } }
+
+/* small marks of the multiverse: section labels carry the four colours, each card glows in its own on hover */
+.section .t-label::before { content: ""; display: inline-block; width: 16px; height: 4px; margin-right: 10px; vertical-align: middle; border-radius: 2px;
+  background: linear-gradient(90deg, var(--uv-acid) 0 25%, var(--uv-magenta) 25% 50%, var(--uv-electric) 50% 75%, var(--uv-sodium) 75%); }
+#how .card { --uv: var(--uv-electric); }
+#how .grid .card:nth-child(2) { --uv: var(--uv-magenta); }
+#how > .wrap > .grid .card:nth-child(1) { --uv: var(--uv-acid); }
+#how > .wrap > .grid .card:nth-child(2) { --uv: var(--uv-sodium); }
+/* the cards' mesh ground, held down to a low glow under the UI */
+#how .card .panel { transition: box-shadow 300ms ease; }
+#how .card .panel > .fx-canvas { opacity: .4; }
+#how .card:hover .panel { box-shadow: 0 0 0 1px color-mix(in oklab, var(--uv) 55%, transparent), 0 0 44px -12px var(--uv); }
+::selection { background: color-mix(in oklab, var(--uv-magenta) 45%, transparent); color: #fff; }
+
+@media (prefers-reduced-motion: reduce) { html header.nav > .nav__bar::before { animation: none; } }

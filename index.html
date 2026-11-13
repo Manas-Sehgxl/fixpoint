@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en" data-type="software" data-radius="sharp" data-ground="navy" data-buttons="solid" data-motion>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixpoint: verified bug fixes for web apps</title>
+<meta name="description" content="A user reports a bug in plain words; Kane CLI reproduces it in Chrome, Claude Code patches the source and Kane proves the patch. Free and MIT licensed.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fixpoint: verified bug fixes for web apps">
+<meta property="og:description" content="Bug reports reproduced, patched and proven in a real browser.">
+<meta property="og:image" content="https://manas-sehgxl.github.io/fixpoint/share.jpg">
+<meta property="og:url" content="https://manas-sehgxl.github.io/fixpoint/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#060A15">
+<link rel="canonical" href="https://manas-sehgxl.github.io/fixpoint/">
+<meta name="site-kind" content="software">
+<meta name="page-type" content="software">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400..500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/system.css">
+<link rel="stylesheet" href="assets/ui/cards.css">
+<link rel="stylesheet" href="assets/motion/motion.css">
+<link rel="stylesheet" href="assets/backgrounds/backgrounds.css">
+<link rel="stylesheet" href="assets/layout/layout.css">
+<link rel="stylesheet" href="assets/icons/icon.css">
+<style>
+:root {
+  --p-bg: #060A15; --p-surface: #0D1424; --p-ink: #E8EDF8; --p-muted: #97A5BF;
+  --p-accent: #8199FF; --p-accent-ink: #060A15; --p-action: #8199FF; --p-action-ink: #060A15;
+  --p-inv-bg: #111A2E; --p-inv-surface: #16213A; --p-inv-ink: #E8EDF8; --p-inv-muted: #A3B0C8;
+  --p-inv-accent: #8199FF; --p-inv-accent-ink: #060A15; --p-inv-action: #8199FF; --p-inv-action-ink: #060A15;
+  --font-display: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-text: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --display-weight: 400;
+  --display-tracking: -0.035em;
+  --display-tracking-xl: -0.042em;
+  --ly-scale: 0.98;
+}
+</style>
+<link rel="stylesheet" href="assets/ui/base.css">
+<link rel="stylesheet" href="assets/ui/window/fragment.css">
+<link rel="stylesheet" href="assets/ui/diff-review/fragment.css">
+<link rel="stylesheet" href="assets/ui/chat/fragment.css">
+<link rel="stylesheet" href="assets/ui/terminal-run/fragment.css">
+<link rel="stylesheet" href="assets/ui/notify/fragment.css">
+<link rel="stylesheet" href="assets/ui/pipeline-board/fragment.css">
+<link rel="stylesheet" href="assets/ui/code/fragment.css">
+<link rel="stylesheet" href="assets/fixpoint.css">
+<script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
+<script src="assets/backgrounds/backgrounds.js"></script>
+<script>document.documentElement.classList.add('mo-js');setTimeout(()=>document.documentElement.classList.add('mo-safe'),2500)</script>
+<link rel="modulepreload" href="assets/moments/moments.js">
+<link rel="modulepreload" href="assets/moments/lib.js">
+<link rel="modulepreload" href="assets/moments/word-highlight/moment.js">
+<link rel="modulepreload" href="assets/moments/liquid-type/moment.js">
+<style>
+  /* A dynamic bar (the client asked for it, over the kit's still nav): past the hero it condenses into a
+     floating pill, its contents on the page's own container edges; a soft marker slides under the word of the section on screen; a thin line tracks the
+     page. Desktop only: phones keep the kit's sheet. */
+  .nav__links { position: relative; }
+  .nav__marker { position: absolute; top: 50%; left: 0; height: 36px; width: var(--mw, 0px); border-radius: 999px; translate: var(--mx, 0px) -50%;
+    background: color-mix(in oklab, var(--ink) 9%, transparent); opacity: 0; pointer-events: none;
+    transition: translate 500ms cubic-bezier(.22,1,.36,1), width 500ms cubic-bezier(.22,1,.36,1), opacity 300ms ease; }
+  .nav__links.has-current .nav__marker { opacity: 1; }
+  .nav__links.has-current .nav__item > .nav__link { color: var(--muted); }
+  .nav__links.has-current .nav__item > .nav__link.is-current { color: var(--ink); }
+  .nav__progress { position: absolute; left: 24px; right: 24px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--action);
+    transform-origin: 0 50%; transform: scaleX(var(--p, 0)); opacity: 0; transition: opacity 300ms ease; pointer-events: none; }
+  @media (min-width: 1024px) {
+    header.nav { transition: background-color 400ms ease, border-color 400ms ease; }
+    header.nav > .nav__bar { position: relative; border: 1px solid transparent; border-radius: 999px;
+      transition: width 600ms cubic-bezier(.22,1,.36,1), height 600ms cubic-bezier(.22,1,.36,1), margin-top 600ms cubic-bezier(.22,1,.36,1), padding 600ms cubic-bezier(.22,1,.36,1), background-color 400ms ease, border-color 400ms ease, box-shadow 400ms ease; }
+    header.nav.is-condensed { background: transparent; border-bottom-color: transparent; pointer-events: none; }
+    header.nav.is-condensed > .nav__bar { pointer-events: auto; width: calc(min(100% - 2 * var(--gut), var(--container)) + 40px); height: 56px; margin-top: 10px; padding: 0 20px; gap: var(--s-6);
+      background: color-mix(in oklab, var(--bg) 86%, transparent); -webkit-backdrop-filter: blur(16px) saturate(150%); backdrop-filter: blur(16px) saturate(150%);
+      border-color: var(--line); box-shadow: 0 20px 44px -24px rgb(0 0 0 / .85); }
+    header.nav.is-condensed .nav__logo { font-size: 19px; }
+    header.nav.is-condensed .nav__progress { opacity: 1; }
+  }
+  @media (max-width: 1023px) { .nav__marker, .nav__progress { display: none; } }
+  @media (prefers-reduced-motion: reduce) { header.nav, header.nav > .nav__bar, .nav__marker { transition: none; } }
+  /* app-frame (sections-library.md), here as the centred hero's window */
+  .app.ui { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); background: var(--u-bg); border: 1px solid var(--u-border); border-radius: var(--u-r); box-shadow: var(--u-shadow); }
+  .app > .app__pane { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+  .app > .app__pane + .app__pane { border-left: 1px solid var(--u-line); }
+  .app > .app__pane > .ui-panel { width: 100%; border: 0; border-radius: 0; box-shadow: none; }
+  .app > .app__pane::after { content: ""; position: absolute; inset: auto 0 0 0; height: 64px; background: linear-gradient(transparent, var(--u-bg)); pointer-events: none; }
+  .hero__window > .app { height: 440px; }
+  @media (max-width: 1023px) {
+    .app.ui { grid-template-columns: minmax(0, 1fr); }
+    .app > .app__pane--list { display: none; }
+    .app > .app__pane + .app__pane { border-left: 0; }
+  }
+  /* the widget's editor is a navy panel, like the console's */
+  #widget .frame .ui { --u-bg: #0D1424; --u-fill-2: #16213A; }
+  #widget .frame { min-height: 540px; }
+  @media (max-width: 639px) { #widget .frame { min-height: 0; --ratio: 72%; } #widget .facts-list, #widget .link { display: none; } #widget .ui-code__pre { font-size: 11px; } #widget .ui-code__ln { padding-right: 4px; padding-left: 36px; } #widget .ui-code__tab + .ui-code__tab, #widget .ui-code__chip { display: none; } }
+  /* the hero lead is read as body text: the ink, 7:1 */
+  .hero--centred .hero__lead { color: var(--ink); }
+  /* the pause buttons in the hero frame ring in the ink */
+  .hero__window .loop-pause:focus-visible { outline-color: #E8EDF8; }
+  /* the tools Fixpoint runs on, beside the questions */
+  .tool-row { list-style: none; margin: var(--s-6) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); }
+  .tool-row li { display: flex; align-items: center; gap: var(--s-3); font-size: var(--t-body); }
+  /* close-word: the name from line to line (it sets at 3.36 x its size) */
+  #contact .close__word { font-size: calc(min(100vw - 160px, 1280px) / 3.5); line-height: .96; }
+  @media (max-width: 1023px) { #contact .close__word { font-size: calc((100vw - 96px) / 3.5); } }
+  @media (max-width: 639px) { #contact .close__word { font-size: calc((100vw - 48px) / 3.5); } }
+  #how .section-head .link { justify-self: start; width: max-content; }
+  #how .panel { --p-h: 360px; }
+  /* tablets: the four cards as one screen (no second group), the FAQ to four questions */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    #how { --h: 1; }
+    #how > .wrap { display: block; }
+    #how > .wrap > .grid { margin-top: var(--s-5); }
+    #how .panel { --p-h: 188px; }
+    #faq .t-lead, #faq .span-5 > .link { display: none; }
+  }
+  @media (max-width: 639px) { .hero__c .pill .muted { display: none; } #faq .t-lead, #faq .span-5 > .link, #faq .faq__item:nth-of-type(n+4) { display: none; } }
+  @media (min-width: 1024px) and (max-width: 1279px) { #how .panel { --p-h: 256px; } }
+  /* a phone keeps three cards, titles and panels, in two screens: the suite card and the card lines go */
+  @media (max-width: 639px) { #how .panel { --p-h: 340px; } #how .ui-chat__day { display: none; } #how .card > p { display: none; } #how :is(.card--suite, .card--triage) { display: none; } }
+</style>
+</head>
+<body>
+<!-- type: software (a developer tool)
+     deal: hero centred, palette graphite-safety-orange (the dealer's own developer-tool dark palette, taken over its first
+     white one because the client asked for a bold dark developer look), type schibsted, radius sharp, nav-centre,
+     close close-word, footer footer-columns, rhythm surface-pairs, buttons solid, mark arc, lit ground sand
+     effect: grain-gradient in the hero frame; card ground: gradient-mesh (one group, #how)
+     moments: liquid-type on the hero headline (dealt; the client asked for a fun page); word-highlight in #promise -->
+<header class="nav nav--centre">
+  <div class="wrap nav__bar">
+    <a class="skip-link" href="#top">Skip to content</a>
+    <a class="nav__logo" href="#top"><svg class="mark-fp" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M2 22L22 2" stroke="#4A5B75" stroke-width="1"/><path d="M2 13.6L4.5 11.2L7 10.3L9.5 9.2L12 8.1L14.5 7L17 6.1L19.5 5.1L22 4.4" fill="none" stroke="#97A5BF" stroke-width="1.4"/><path d="M3.2 22V11.2H12.8V6.2H17.8V4.6" fill="none" stroke="#8199FF" stroke-width="1.6"/><circle cx="19.85" cy="4.15" r="2.3" fill="#4CD69E"/></svg>Fixpoint</a>
+    <nav class="nav__links" aria-label="Main">
+      <span class="nav__marker" aria-hidden="true"></span>
+      <div class="nav__item">
+        <a class="nav__link" href="#how">Loop <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="nav__menu">
+          <div class="wrap grid">
+            <div class="menu-col span-3">
+              <p class="t-label">Each report</p>
+              <a href="#how">Check<span>One browser check per report</span></a>
+              <a href="#how">Reproduce<span>Kane fails it in Chrome</span></a>
+              <a href="#top">Fix<span>Claude Code patches the source</span></a>
+              <a href="#how">Prove<span>Kane replays every fix</span></a>
+            </div>
+            <div class="menu-col span-3">
+              <p class="t-label">Safety</p>
+              <a href="#promise">Rollback<span>After three failed attempts</span></a>
+              <a href="#how">Questions<span>One to the reporter</span></a>
+              <a href="#faq">Approval<span>Fix only when you say so</span></a>
+            </div>
+            <a class="menu-card span-3 start-10" href="#how">
+              <div class="panel"><img class="frame__img" src="console.jpg" alt="The Fixpoint board with five reports" width="1200" height="750" loading="lazy"></div>
+              <span class="t-card">The console</span>
+              <span class="t-small muted">Every report, live</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="nav__item"><a class="nav__link" href="#promise">Proof</a></div>
+      <div class="nav__item"><a class="nav__link" href="#widget">Widget</a></div>
+      <div class="nav__item"><a class="nav__link" href="#faq">Questions</a></div>
+    </nav>
+    <div class="nav__actions">
+      <a class="nav__link" href="https://github.com/Manas-Sehgxl/fixpoint#readme">Docs</a>
+      <a class="btn btn--primary" href="https://github.com/Manas-Sehgxl/fixpoint">Get the source</a>
+    </div>
+    <span class="nav__progress" aria-hidden="true"></span>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-label="Menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 5h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero hero--centred" data-enter aria-labelledby="hero-h">
+    <div class="wrap"><div class="hero-text">
+      <div class="hero__c" data-moment="liquid-type">
+        <h1 id="hero-h" class="mo-lt__type">Verified bug fixes for web apps</h1>
+        <p class="hero__lead">A user reports a bug in plain words. Kane CLI reproduces it in Chrome, Claude Code patches your source, and Kane runs the same check until it passes.</p>
+        <div class="btn-row"><a class="btn btn--primary" href="https://github.com/Manas-Sehgxl/fixpoint">Get the source</a><a class="btn btn--secondary" href="#how">See the loop</a></div>
+      </div>
+      <div class="hero__window" data-fx="grain-gradient" data-fx-seed="7" data-fx-palette='{"bg":"#0A1020","surface":"#111A2E","ink":"#E8EDF8","muted":"#97A5BF","accent":"#2C3C86"}'>
+        <div class="ly-piece ui app" data-ui-pause-host role="img" aria-label="The Fixpoint console: the report queue, and the patch for report 8 in js/pricing.js waiting for Kane to check it">
+          <div class="app__pane app__pane--list">
+            <div class="ui ui-panel ui-win" data-ui="window" data-open="Queued" data-work="Fixing" data-done="Proven">
+              <div class="ui-win__bar">
+                <span class="ui-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="ui-win__crumb"><svg class="ui-brand" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M2 22 22 2" stroke="currentColor" stroke-width="1.6" opacity=".5"/><path d="M2 14h8V9h5V6" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="currentColor"/></svg>Fixpoint <i>/</i> <b>Reports</b></span>
+                <span class="ui-spacer"></span>
+                <span class="ui-win__search" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span class="ui-win__ph">Search</span><span class="ui-kbd">/</span></span>
+              </div>
+              <div class="ui-win__body">
+                <nav class="ui-win__side" aria-hidden="true">
+                  <span class="ui-win__nav is-on"><svg class="ui-icon" viewBox="0 0 16 16"><path d="M2.5 9h3l1 1.5h3l1-1.5h3"/><path d="M2.5 9 4 3.5h8L13.5 9v3.5h-11z"/></svg>All<em>9</em></span>
+                  <span class="ui-win__nav"><svg class="ui-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3l2 1.5"/></svg>In progress<em>3</em></span>
+                  <span class="ui-win__nav"><svg class="ui-icon" viewBox="0 0 16 16"><circle cx="8" cy="6" r="2.5"/><path d="M3.5 13.5c.6-2.3 2.4-3.5 4.5-3.5s3.9 1.2 4.5 3.5"/></svg>Needs you<em>1</em></span>
+                  <span class="ui-win__nav"><svg class="ui-icon" viewBox="0 0 16 16"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg>Proven</span>
+                  <span class="ui-win__label">Apps</span>
+                  <span class="ui-win__nav"><span class="ui-win__hash">#</span>tapri</span>
+                </nav>
+                <div class="ui-win__main">
+                  <div class="ui-win__cols" aria-hidden="true"><span>Report</span><span>Check</span><span>Status</span><span>Filed</span></div>
+                  <ul class="ui-win__rows">
+                    <li class="ui-win__row" data-row><span class="ui-avatar" data-tone="1">9</span><span class="ui-win__who">Report 9</span><span class="ui-win__sub">Searching in lower case finds nothing</span><span class="ui-win__st" data-st>Queued</span><span class="ui-win__age">1m</span></li>
+                    <li class="ui-win__row" data-row><span class="ui-avatar" data-tone="3">8</span><span class="ui-win__who">Report 8</span><span class="ui-win__sub">A ₹499 order is still charged ₹40 delivery</span><span class="ui-win__st" data-st>Queued</span><span class="ui-win__age">4m</span></li>
+                    <li class="ui-win__row" data-row><span class="ui-avatar" data-tone="4">7</span><span class="ui-win__who">Report 7</span><span class="ui-win__sub">Minus button takes the quantity below one</span><span class="ui-win__st" data-st>Queued</span><span class="ui-win__age">9m</span></li>
+                    <li class="ui-win__row" data-row><span class="ui-avatar" data-tone="2">6</span><span class="ui-win__who">Report 6</span><span class="ui-win__sub">The menu colours are too bright</span><span class="ui-win__st is-you" data-st>Needs you</span><span class="ui-win__age">14m</span></li>
+                    <li class="ui-win__row" data-row><span class="ui-avatar" data-tone="5">2</span><span class="ui-win__who">Report 2</span><span class="ui-win__sub">Coupon only works typed in capitals</span><span class="ui-win__st is-done" data-st>Proven</span><span class="ui-win__age">31m</span></li>
+                    <li class="ui-win__row" data-row><span class="ui-avatar" data-tone="3">1</span><span class="ui-win__who">Report 1</span><span class="ui-win__sub">Total stays the same after removing a pouch</span><span class="ui-win__st is-done" data-st>Proven</span><span class="ui-win__age">38m</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="app__pane app__pane--open" data-ui-loop>
+            <div class="ui ui-panel ui-diff" data-ui="diff-review">
+              <div class="ui-diff__head">
+                <svg class="ui-icon ui-diff__fold" viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 6.25 3.5 3.5 3.5-3.5"/></svg>
+                <span class="ui-diff__tool" aria-hidden="true"><img data-icon="javascript" src="assets/icons/javascript.svg" alt="" width="16" height="16"></span>
+                <span class="ui-diff__repo">tapri</span><i class="ui-diff__slash" aria-hidden="true">/</i>
+                <span class="ui-diff__path"><span class="ui-diff__dir">js/</span><b>pricing.js</b></span>
+                <span class="ui-spacer"></span>
+                <span class="ui-diff__stat"><b class="is-add"><span class="ui-diff__was">+0</span><span class="ui-diff__now">+1</span></b><b class="is-del"><span class="ui-diff__was">&minus;0</span><span class="ui-diff__now">&minus;1</span></b><span class="ui-diff__bar" aria-hidden="true"><i class="is-add"></i><i class="is-del"></i></span></span>
+              </div>
+              <div class="ui-diff__hunk"><span>@@ -10,12 +10,12 @@</span> <em class="ui-diff__sig">export function lineTotal(line) {</em></div>
+              <div class="ui-diff__lines">
+                <div class="ui-diff__ln"><i>10</i><i>10</i><span class="ui-diff__code" data-i="0"></span></div>
+                <div class="ui-diff__ln"><i>11</i><i>11</i><span class="ui-diff__code" data-i="0"><span class="k">export function</span> <span class="f">lineTotal</span>(line) {</span></div>
+                <div class="ui-diff__ln"><i>12</i><i>12</i><span class="ui-diff__code" data-i="1"><span class="ui-diff__ind">  </span><span class="k">const</span> product = <span class="f">findProduct</span>(line.id);</span></div>
+                <div class="ui-diff__ln"><i>13</i><i>13</i><span class="ui-diff__code" data-i="1"><span class="ui-diff__ind">  </span><span class="k">return</span> product ? product.price * line.qty : <span class="n">0</span>;</span></div>
+                <div class="ui-diff__ln"><i>14</i><i>14</i><span class="ui-diff__code" data-i="0">}</span></div>
+                <div class="ui-diff__ln"><i>15</i><i>15</i><span class="ui-diff__code" data-i="0"></span></div>
+                <div class="ui-diff__ln"><i>16</i><i>16</i><span class="ui-diff__code" data-i="0"><span class="k">export function</span> <span class="f">deliveryFor</span>(subtotal) {</span></div>
+                <div class="ui-diff__ln"><i>17</i><i>17</i><span class="ui-diff__code" data-i="1"><span class="ui-diff__ind">  </span><span class="k">if</span> (subtotal &lt;= <span class="n">0</span>) <span class="k">return</span> <span class="n">0</span>;</span></div>
+                <div class="ui-diff__ln is-target" data-diff-target><i>18</i><i>18</i><span class="ui-diff__code" data-i="1"><span class="ui-diff__ind">  </span><span class="k">return</span> subtotal <mark class="ui-diff__w">&gt;</mark> FREE_DELIVERY_FROM ? <span class="n">0</span> : DELIVERY_FEE;</span></div>
+                <div class="ui-diff__sug" data-diff-sug><div class="ui-diff__ln is-add"><i></i><i>18</i><span class="ui-diff__code" data-i="1"><span class="ui-diff__ind">  </span><span class="k">return</span> subtotal <mark class="ui-diff__w">&gt;=</mark> FREE_DELIVERY_FROM ? <span class="n">0</span> : DELIVERY_FEE;</span></div></div>
+                <div class="ui-diff__thread">
+                  <div class="ui-diff__by">
+                    <span class="ui-avatar" data-tone="4">CC</span>
+                    <span class="ui-diff__name">Claude Code</span>
+                    <span class="ui-diff__time">report 8</span>
+                    <span class="ui-spacer"></span>
+                    <span class="ui-diff__act" data-diff-act>
+                      <button class="ui-btn ui-btn--sm ui-diff__apply" type="button" tabindex="-1" data-diff-apply><span class="ui-diff__lbl">Apply patch</span><i class="ui-diff__spin" aria-hidden="true"></i></button>
+                      <span class="ui-chip ui-diff__done"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 8.4 2.6 2.6L12 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Kane passed</span>
+                    </span>
+                  </div>
+                  <div class="ui-diff__msg">Free delivery starts at ₹499, so a ₹499 order counts: use <code>&gt;=</code>.</div>
+                </div>
+                <div class="ui-diff__ln"><i>19</i><i>19</i><span class="ui-diff__code" data-i="0">}</span></div>
+                <div class="ui-diff__ln"><i>20</i><i>20</i><span class="ui-diff__code" data-i="0"></span></div>
+                <div class="ui-diff__ln"><i>21</i><i>21</i><span class="ui-diff__code" data-i="0"><span class="k">export function</span> <span class="f">priceCart</span>(lines, coupon) {</span></div>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div class="hero-film" data-hero-film>
+          <video class="hero-film__video" muted loop playsinline preload="none" poster="assets/video/preview.jpg" aria-hidden="true" tabindex="-1">
+            <source src="assets/video/preview.mp4" type="video/mp4">
+          </video>
+          <button class="btn btn--primary hero-film__play" type="button" data-film-play aria-label="Play the demo, 2 minutes 4 seconds"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 1.8v8.4L10 6z" fill="currentColor"/></svg>Demo<span class="hero-film__len">2:04</span></button>
+        </div>
+      </div>
+      </div>
+    </div></div>
+  </section>
+
+  <section class="section g2 ground-surface" id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <div class="group">
+        <div class="section-head">
+          <h2 id="how-h">How a report gets fixed. <span class="muted">Kane CLI checks every step in Chrome.</span></h2>
+          <a class="link" href="https://github.com/Manas-Sehgxl/fixpoint#how-the-loop-works">How it works</a>
+        </div>
+        <div class="grid">
+          <article class="card card--row card--open span-6 m-nolift card--triage">
+            <h3>Writes one check per report</h3>
+            <p>Claude Code reads the report and your source, then writes a plain English check that fails while the bug is there.</p>
+            <div class="panel" data-fx="gradient-mesh" data-fx-seed="21" data-fx-palette='{"bg":"#0A1020","surface":"#111A2E","ink":"#E8EDF8","muted":"#97A5BF","accent":"#2C3C86"}' data-fx-params='{"speed":0,"calm":0.2,"calmX":0.45,"calmY":0.95,"tint":0.22,"relief":0.25}' style="--calm-k:0%">
+              <div class="stage stage--fade-b"><div class="at-rise fit" style="--fit-max:400px;--ax:max(24px, 50% - 200px);--ay:48px;--ay-sm:24px" data-ui-loop>
+                <div class="ui ui-panel ui-chat" data-ui="chat">
+                  <div class="ui-head"><span class="ui-agent" aria-hidden="true"></span><div class="ui-title">Report 1</div><span class="ui-chat__online">Triage</span><span class="ui-spacer"></span></div>
+                  <div class="ui-chat__body">
+                    <div class="ui-chat__day">From the widget on tapri</div>
+                    <div class="ui-msg ui-msg--me" data-chat-q><span class="ui-msg__text">I removed the Elaichi Chai from my cart but the total did not change at all</span></div>
+                    <div class="ui-msg ui-msg--bot" data-chat-a>
+                      <span class="ui-agent ui-msg__av" aria-hidden="true"></span>
+                      <span class="ui-msg__col">
+                        <span class="ui-chat__typing" aria-hidden="true"><i></i><i></i><i></i></span>
+                        <span class="ui-chat__answer">Check written: add Masala Chai and Elaichi Chai, remove Elaichi Chai, then <b>verify the total shows ₹289</b>.</span>
+                        <span class="ui-chat__srcs"><span class="ui-chat__src"><svg class="ui-icon" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>js/cart.js</span></span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="ui-chat__input"><span class="ui-chat__ph">Reply to the reporter</span><span class="ui-chat__send" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 13V3.5M3.8 7.5 8 3.3l4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+                </div>
+              </div></div>
+            </div>
+          </article>
+          <article class="card card--row card--open span-6 m-nolift">
+            <h3>Runs every check in Kane CLI</h3>
+            <p>Kane drives a real Chrome and streams each step back. A failing first run proves the bug is real.</p>
+            <div class="panel" data-fx="gradient-mesh" data-fx-seed="22" data-fx-palette='{"bg":"#0A1020","surface":"#111A2E","ink":"#E8EDF8","muted":"#97A5BF","accent":"#1D5E5A"}' data-fx-params='{"speed":0,"calm":0.2,"calmX":0.5,"calmY":0.95,"tint":0.22,"relief":0.25}' style="--calm-k:0%">
+              <div class="stage"><div class="at-rise fit" style="--fit-max:440px;--ax:max(24px, 50% - 220px);--ay:40px;--ay-sm:24px">
+                <div class="ui ui-panel ui-term" data-ui="terminal-run">
+                  <div class="ui-term__head">
+                    <span class="ui-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span class="ui-term__title">kane-cli 0.10.3</span>
+                    <span class="ui-meta">bash</span>
+                    <span class="ui-spacer"></span>
+                    <span class="ui-chip ui-chip--plain ui-term__branch">headless</span>
+                  </div>
+                  <div class="ui-term__screen" data-term-screen>
+                    <div class="ui-term__track" data-term-track>
+                      <div class="ui-term__ln ui-term__cmd"><span class="ui-term__cwd">~/<span class="ui-term__up">code/</span>tapri</span><span class="ui-term__sig">$</span><span class="ui-term__typed" data-term-cmd>kane-cli run "$CHECK"</span></div>
+                      <div class="ui-term__ln ui-term__meter" data-term-out data-term-meter><span class="ui-term__bar" style="--p:1"><i></i></span><span class="ui-term__count" data-term-count>3 of 3 steps</span></div>
+                      <div class="ui-term__ln ui-term__log" data-term-out data-term-step><svg class="ui-term__tick" viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg><span class="ui-term__path">navigate to example.com</span><span class="ui-term__n">step 1</span><span class="ui-term__t">0.0s</span></div>
+                      <div class="ui-term__ln ui-term__log" data-term-out data-term-step><svg class="ui-term__tick" viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg><span class="ui-term__path">analyze 'Example Domain'</span><span class="ui-term__n">step 2</span><span class="ui-term__t">6.5s</span></div>
+                      <div class="ui-term__ln ui-term__log" data-term-out data-term-step><svg class="ui-term__tick" viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg><span class="ui-term__path">assert 'Example Domain'</span><span class="ui-term__n">step 3</span><span class="ui-term__t">8ms</span></div>
+                      <div class="ui-term__ln ui-term__gap" data-term-out aria-hidden="true"></div>
+                      <div class="ui-term__ln ui-term__sum" data-term-out><span class="ui-term__key">Steps</span><span class="ui-term__val">3 passed</span><span class="ui-term__dim">(3)</span></div>
+                      <div class="ui-term__ln ui-term__sum" data-term-out><span class="ui-term__key">Credits</span><span class="ui-term__val">6.3 used</span></div>
+                      <div class="ui-term__ln ui-term__done" data-term-out data-term-done><span class="ui-term__ok"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 8.3 2.4 2.4 4.6-5"/></svg></span><b>Passed</b><span class="ui-term__dim">in 13.8s</span></div>
+                      <div class="ui-term__ln ui-term__cmd" data-term-next><span class="ui-term__cwd">~/<span class="ui-term__up">code/</span>tapri</span><span class="ui-term__sig">$</span><span class="ui-term__typed"></span><i class="ui-term__caret" aria-hidden="true"></i></div>
+                    </div>
+                  </div>
+                </div>
+              </div></div>
+            </div>
+          </article>
+        </div>
+      </div>
+      <div class="grid">
+        <article class="card card--row card--open span-6 m-nolift">
+          <h3>Asks the reporter one question</h3>
+          <p>When Kane cannot make the bug happen, the reporter gets one question in the widget. Two rounds, then it closes.</p>
+          <div class="panel" data-fx="gradient-mesh" data-fx-seed="23" data-fx-palette='{"bg":"#0A1020","surface":"#111A2E","ink":"#E8EDF8","muted":"#97A5BF","accent":"#2C3C86"}' data-fx-params='{"speed":0,"calm":0.2,"calmX":0.5,"calmY":0.95,"tint":0.22,"relief":0.25}' style="--calm-k:0%">
+            <div class="stage stage--fade-b"><div class="at-rise fit" style="--fit-max:400px;--ax:max(24px, 50% - 200px);--ay:calc(100% - 180px);--ay-sm:calc(100% - 180px)">
+              <div class="ui ui-notify" data-ui="notify">
+                <ul class="ui-notify__list" data-notify-list>
+                  <li class="ui-note"><span class="ui-agent ui-note__av" aria-hidden="true"></span><span class="ui-note__text"><span class="ui-note__title">Question for report 8<time>now</time></span><span class="ui-note__body">What was in your cart, and what delivery charge did the bill show?</span></span><span class="ui-btn ui-btn--sm ui-note__btn">Open</span></li>
+                  <li class="ui-note"><span class="ui-avatar ui-note__av" data-tone="5">5</span><span class="ui-note__text"><span class="ui-note__title">Report 5 answered<time>6m</time></span><span class="ui-note__body">Queued again with the reply</span></span></li>
+                  <li class="ui-note"><span class="ui-note__ico"><svg class="ui-icon" viewBox="0 0 16 16"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg></span><span class="ui-note__text"><span class="ui-note__title">Report 3 closed<time>20m</time></span><span class="ui-note__body">Not reproduced after two questions</span></span></li>
+                </ul>
+              </div>
+            </div></div>
+          </div>
+        </article>
+        <article class="card card--row card--open span-6 m-nolift card--suite">
+          <h3>Replays every earlier fix</h3>
+          <p>Each proven check joins the suite. After the next patch, Kane replays all of them before anything counts as fixed.</p>
+          <div class="panel" data-fx="gradient-mesh" data-fx-seed="24" data-fx-palette='{"bg":"#0A1020","surface":"#111A2E","ink":"#E8EDF8","muted":"#97A5BF","accent":"#1D5E5A"}' data-fx-params='{"speed":0,"calm":0.2,"calmX":0.5,"calmY":0.95,"tint":0.22,"relief":0.25}' style="--calm-k:0%">
+            <div class="stage"><div class="at-rise fit" style="--fit-max:420px;--ax:max(24px, 50% - 210px);--ay:36px;--ay-sm:24px">
+              <div class="ui ui-panel ui-pipe" data-ui="pipeline-board">
+                <div class="ui-pipe__head">
+                  <svg class="ui-icon ui-pipe__branch" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4.5" cy="3.5" r="1.5"/><circle cx="4.5" cy="12.5" r="1.5"/><circle cx="11.5" cy="5" r="1.5"/><path d="M4.5 5v6M11.5 6.5c0 2.6-2.2 3.6-5.6 4.6"/></svg>
+                  <span class="ui-pipe__repo">tapri</span><i class="ui-pipe__slash">/</i><code class="ui-pipe__ref">suite</code>
+                  <span class="ui-pipe__run">report 7</span>
+                  <span class="ui-spacer"></span>
+                  <span class="ui-pipe__total"><svg class="ui-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8.5" r="5.5"/><path d="M8 5.5v3l2 1.25M6.5 1.75h3"/></svg><span data-pipe-total>41s</span></span>
+                  <span class="ui-chip ui-chip--ink ui-chip--live ui-pipe__chip" data-pipe-chip data-done="Holds">Replaying</span>
+                </div>
+                <div class="ui-pipe__commit">
+                  <span class="ui-avatar" data-tone="4">CC</span>
+                  <span class="ui-pipe__msg">Clamp the quantity at one</span>
+                  <code class="ui-pipe__sha">js/cart.js</code>
+                  <button class="ui-btn ui-btn--ghost ui-btn--sm ui-pipe__btn" type="button" tabindex="-1" data-pipe-btn data-done="Run again">Stop</button>
+                </div>
+                <ol class="ui-pipe__steps">
+                  <li class="ui-pipe__step is-done" data-step="r1"><span class="ui-pipe__ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 8.2 2.3 2.3 4.7-5"/></svg></span><span class="ui-pipe__name"><span class="ui-pipe__tool" aria-hidden="true"><img data-icon="chrome" src="assets/icons/chrome.svg" alt="" width="16" height="16" loading="lazy"></span><span class="ui-pipe__nm">Report 1</span></span><code class="ui-pipe__cmd">testmd run fp-1-r1</code><span class="ui-pipe__time" data-time>14s</span><span class="ui-pipe__bar"><i></i></span></li>
+                  <li class="ui-pipe__step is-done" data-step="r2"><span class="ui-pipe__ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 8.2 2.3 2.3 4.7-5"/></svg></span><span class="ui-pipe__name"><span class="ui-pipe__tool" aria-hidden="true"><img data-icon="chrome" src="assets/icons/chrome.svg" alt="" width="16" height="16" loading="lazy"></span><span class="ui-pipe__nm">Report 2</span></span><code class="ui-pipe__cmd">testmd run fp-2-r1</code><span class="ui-pipe__time" data-time>16s</span><span class="ui-pipe__bar"><i></i></span></li>
+                  <li class="ui-pipe__step is-run" data-step="r4" style="--k:0.6"><span class="ui-pipe__ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 8.2 2.3 2.3 4.7-5"/></svg></span><span class="ui-pipe__name"><span class="ui-pipe__tool" aria-hidden="true"><img data-icon="chrome" src="assets/icons/chrome.svg" alt="" width="16" height="16" loading="lazy"></span><span class="ui-pipe__nm">Report 4</span></span><code class="ui-pipe__cmd">testmd run fp-4-r1</code><span class="ui-pipe__time" data-time="19s">11s</span><span class="ui-pipe__bar"><i></i></span></li>
+                  <li class="ui-pipe__step" data-step="r5"><span class="ui-pipe__ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 8.2 2.3 2.3 4.7-5"/></svg></span><span class="ui-pipe__name"><span class="ui-pipe__tool" aria-hidden="true"><img data-icon="chrome" src="assets/icons/chrome.svg" alt="" width="16" height="16" loading="lazy"></span><span class="ui-pipe__nm">Report 5</span></span><code class="ui-pipe__cmd">testmd run fp-5-r2</code><span class="ui-pipe__time" data-time="15s">Queued</span><span class="ui-pipe__bar"><i></i></span></li>
+                  <li class="ui-pipe__step" data-step="r7"><span class="ui-pipe__ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 8.2 2.3 2.3 4.7-5"/></svg></span><span class="ui-pipe__name"><span class="ui-pipe__tool" aria-hidden="true"><img data-icon="chrome" src="assets/icons/chrome.svg" alt="" width="16" height="16" loading="lazy"></span><span class="ui-pipe__nm">Report 7</span></span><code class="ui-pipe__cmd">kane-cli run</code><span class="ui-pipe__time" data-time="18s">Queued</span><span class="ui-pipe__bar"><i></i></span></li>
+                </ol>
+                <div class="ui-pipe__log" aria-hidden="true">
+                  <span class="ui-pipe__line" data-step="r1"><b>$</b>kane-cli testmd run fp-1-r1_test.md --agent</span>
+                  <span class="ui-pipe__line" data-step="r1">total shows ₹289: passed</span>
+                  <span class="ui-pipe__line" data-step="r2"><b>$</b>kane-cli testmd run fp-2-r1_test.md --agent</span>
+                  <span class="ui-pipe__line" data-step="r2">chai10 takes 10% off: passed</span>
+                  <span class="ui-pipe__line is-on" data-step="r4"><b>$</b>kane-cli testmd run fp-4-r1_test.md --agent</span>
+                  <span class="ui-pipe__line is-on" data-step="r4">replaying 6 recorded steps</span>
+                  <span class="ui-pipe__line" data-step="r5"><b>$</b>kane-cli testmd run fp-5-r2_test.md --agent</span>
+                  <span class="ui-pipe__line" data-step="r7"><b>$</b>kane-cli run "&lt;report 7 check&gt;" --agent</span>
+                </div>
+              </div>
+            </div></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section statement" id="promise" data-moment="word-highlight" aria-label="When a fix counts">
+    <div class="wrap">
+      <p class="t-label">When a fix counts</p>
+      <p class="mo-wh__text">A fix counts only when Kane has watched the check fail on the bug, watched it pass on the patch, and every earlier check still <strong>holds</strong>. Three attempts without that, and Fixpoint rolls the code back.</p>
+    </div>
+  </section>
+
+  <section class="section" id="widget" aria-labelledby="widget-h">
+    <div class="wrap">
+      <div class="grid">
+        <div class="span-5 stack-5">
+          <h2 id="widget-h">Adds a report button with one script tag</h2>
+          <p class="t-lead">Paste one line before your closing body tag. Visitors get a Report a problem button that sends the page, their last actions and console errors.</p>
+          <ul class="facts-list stack-3">
+            <li>Name, phone, email, address and card fields never record a value.</li>
+            <li>Each report gets a live status page the reporter can answer on.</li>
+            <li>Five reports at once per visitor, then one every ten seconds.</li>
+          </ul>
+          <a class="link" href="https://github.com/Manas-Sehgxl/fixpoint#readme">Setup guide</a>
+        </div>
+        <div class="frame frame--split frame--lit span-6 start-7">
+          <div class="stage stage--fade-br"><div class="at-rise to-edge" style="--w:440px;--ax:max(24px, 50% - 220px);--ay:56px">
+            <div class="ui ui-panel ui-code" data-ui="code">
+              <div class="ui-code__tabs">
+                <span class="ui-code__tab is-on"><i class="ui-code__lang">HTML</i>index.html</span>
+                <span class="ui-code__tab"><i class="ui-code__lang">JSON</i>fixpoint.json</span>
+                <span class="ui-spacer"></span>
+                <span class="ui-chip ui-chip--plain ui-code__chip" data-code-chip>1 tag</span>
+              </div>
+              <pre class="ui-code__pre"><code><span class="ui-code__ln" data-n="64">  &lt;/<span class="k">footer</span>&gt;</span>
+<span class="ui-code__ln" data-n="65"></span>
+<span class="ui-code__ln" data-n="66" data-note="Your own scripts stay as they are.">  &lt;<span class="k">script</span> <span class="f">src</span>=<span class="s">"js/app.js"</span>&gt;&lt;/<span class="k">script</span>&gt;</span>
+<span class="ui-code__ln is-mark" data-n="67">  &lt;<span class="k">script</span></span>
+<span class="ui-code__ln" data-n="68">    <span class="f">src</span>=<span class="s">"http://localhost:7777/widget.js"</span></span>
+<span class="ui-code__ln" data-n="69" data-note="Reports go to the console named here.">    <span class="f">data-fixpoint</span>=<span class="s">"http://localhost:7777"</span></span>
+<span class="ui-code__ln" data-n="70" data-note="Loads after your page, so it never slows it.">    <span class="f">defer</span>&gt;&lt;/<span class="k">script</span>&gt;</span>
+<span class="ui-code__ln" data-n="71">&lt;/<span class="k">body</span>&gt;</span>
+<span class="ui-code__ln" data-n="72">&lt;/<span class="k">html</span>&gt;</span></code></pre>
+              <div class="ui-code__hint" data-code-hint><span class="ui-dot"></span><span data-code-text>The one tag Fixpoint adds before your closing body tag.</span></div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+      <div class="grid">
+        <div class="span-5 stack-4">
+          <h2 id="faq-h">Questions</h2>
+          <p class="t-lead muted">Answers from the code and the README.</p>
+          <a class="link" href="https://github.com/Manas-Sehgxl/fixpoint/issues">Ask on GitHub</a>
+          <ul class="tool-row" aria-label="What Fixpoint runs on">
+            <li><span class="ic-tile ic-tile--40 ic-tile--wide"><img class="ic ic-40 ic-wide" src="assets/icons/go.svg" alt="" width="40" height="15" loading="lazy"></span>Go 1.24</li>
+            <li><span class="ic-tile ic-tile--40"><img class="ic ic-40" src="assets/icons/npm.svg" alt="" width="40" height="40" loading="lazy"></span>Kane CLI</li>
+            <li><span class="ic-tile ic-tile--40"><img class="ic ic-40" src="assets/icons/claude.svg" alt="" width="40" height="40" loading="lazy"></span>Claude Code</li>
+            <li><span class="ic-tile ic-tile--40"><img class="ic ic-40" src="assets/icons/chrome.svg" alt="" width="40" height="40" loading="lazy"></span>Chrome</li>
+          </ul>
+        </div>
+        <div class="faq span-6 start-7">
+          <div class="faq__item"><h3>What does Fixpoint need installed?</h3><p>Go 1.24 or newer, Kane CLI signed in, Claude Code signed in, and Chrome. <code>fixpoint doctor</code> says what is missing.</p></div>
+          <div class="faq__item"><h3>Can I try Fixpoint without accounts?</h3><p>Yes. <code>fixpoint up --stubs</code> runs stand-ins for Kane and the agent, and every page says nothing was verified.</p></div>
+          <div class="faq__item"><h3>Will Fixpoint change code without asking?</h3><p>By default it patches once Kane reproduces the bug. With <code>--autonomy ask</code>, each fix waits for your approval.</p></div>
+          <div class="faq__item"><h3>What happens when a patch fails?</h3><p>The agent tries again with Kane's newest run, up to three attempts. Then every patch is rolled back and the report comes to you.</p></div>
+          <div class="faq__item"><h3>What does each report cost?</h3><p>Fixpoint is free. Kane reports the credits each run used and the agent its cost per attempt; the case file shows both.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer closing g2m" id="contact" aria-labelledby="close-h">
+  <div class="wrap">
+    <div class="closing__cta close--word">
+      <div class="section-head--split">
+        <div><h2 id="close-h">Run it on your own app</h2><p class="t-lead">One Go binary. Kane CLI and Claude Code do the browser work and the patches.</p></div>
+        <a class="btn btn--primary" href="https://github.com/Manas-Sehgxl/fixpoint">Get the source<svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
+      </div>
+      <p class="close__word" aria-hidden="true">Fixpoint</p>
+    </div>
+    <div class="closing__links">
+      <div class="grid">
+        <div class="span-4 stack-4">
+          <a class="nav__logo" href="#top"><svg class="mark-fp" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M2 22L22 2" stroke="#4A5B75" stroke-width="1"/><path d="M2 13.6L4.5 11.2L7 10.3L9.5 9.2L12 8.1L14.5 7L17 6.1L19.5 5.1L22 4.4" fill="none" stroke="#97A5BF" stroke-width="1.4"/><path d="M3.2 22V11.2H12.8V6.2H17.8V4.6" fill="none" stroke="#8199FF" stroke-width="1.6"/><circle cx="19.85" cy="4.15" r="2.3" fill="#4CD69E"/></svg>Fixpoint</a>
+          <p class="footer__lede">Bug reports, proven fixed.</p>
+        </div>
+        <div class="span-2 footer__col"><h3>Loop</h3><ul><li><a href="#how">Checks</a></li><li><a href="#promise">When a fix counts</a></li></ul></div>
+        <div class="span-2 footer__col"><h3>Widget</h3><ul><li><a href="#widget">Install</a></li><li><a href="#widget">Privacy rules</a></li></ul></div>
+        <div class="span-2 footer__col"><h3>Questions</h3><ul><li><a href="#faq">Setup</a></li><li><a href="#faq">Cost</a></li></ul></div>
+        <div class="span-2 footer__col"><h3>Source</h3><ul><li><a href="https://github.com/Manas-Sehgxl/fixpoint">GitHub</a></li><li><a href="https://github.com/Manas-Sehgxl/fixpoint/blob/main/LICENSE">MIT licence</a></li></ul></div>
+      </div>
+      <div class="footer__legal">
+        <span>&copy; 2026 Fixpoint, an entry for the Kane CLI hackathon</span>
+        <div class="socials"></div>
+        <span class="credits">Product names and logos are trademarks of their owners</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* the dynamic bar: condense past the hero, mark the section on screen, track the page */
+(() => {
+  const nav = document.querySelector('header.nav'), links = nav.querySelector('.nav__links'), marker = links.querySelector('.nav__marker');
+  const prog = nav.querySelector('.nav__progress'), hero = document.querySelector('.hero');
+  const map = [['how', 0], ['promise', 1], ['widget', 2], ['faq', 3]];
+  const words = [...links.querySelectorAll(':scope > .nav__item > .nav__link')];
+  let current = -1, ticking = false;
+  const place = () => {
+    if (current < 0) { links.classList.remove('has-current'); return; }
+    const a = words[current], r = a.getBoundingClientRect(), l = links.getBoundingClientRect();
+    links.style.setProperty('--mx', (r.left - l.left) + 'px'); links.style.setProperty('--mw', r.width + 'px');
+    words.forEach((w, i) => w.classList.toggle('is-current', i === current));
+    links.classList.add('has-current');
+  };
+  const update = () => {
+    ticking = false;
+    const y = scrollY, h = innerHeight;
+    nav.classList.toggle('is-condensed', y > (hero ? hero.offsetHeight * 0.6 : 200));
+    const max = document.documentElement.scrollHeight - h;
+    prog.style.setProperty('--p', max > 0 ? Math.min(1, y / max).toFixed(4) : 0);
+    let next = -1;
+    for (const [id, i] of map) { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < h * 0.45) next = i; }
+    if (document.getElementById('contact').getBoundingClientRect().top < h * 0.45) next = -1;
+    if (next !== current) { current = next; place(); }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', () => { place(); onScroll(); });
+  nav.addEventListener('transitionend', place);
+  update();
+})();
+</script>
+<script type="module" src="assets/system.js"></script>
+<script type="module" src="assets/motion/motion.js"></script>
+<script type="module" src="assets/layout/layout.js"></script>
+<script type="module" src="assets/fixpoint.js"></script>
+</body>
+</html>
