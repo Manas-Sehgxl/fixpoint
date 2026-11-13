@@ -103,6 +103,23 @@ coupon fix. Both tests passed, and only then was the report closed.
 </p>
 <p align="center"><sub>The case file Fixpoint keeps for every report: what was wrong, what changed, and Kane's runs before and after.</sub></p>
 
+## No Claude Code? Three ways in
+
+1. **See it without any account.** `./fixpoint up --stubs` runs the whole loop with simple
+   stand-ins for Kane and Claude Code (see [Try it in 30 seconds](#try-it-in-30-seconds)).
+2. **Check the real runs without running anything.** [Proof from real runs](#proof-from-real-runs)
+   links every real Kane run in TestMu's Test Manager, with screenshots from before and after the fix.
+3. **Run the real loop on an API key instead of a subscription.** Installing Claude Code is
+   free; it can be paid for with an Anthropic API key instead of a Claude login:
+   ```sh
+   npm install -g @anthropic-ai/claude-code
+   export ANTHROPIC_API_KEY=sk-ant-...     # from console.anthropic.com; set a spend limit
+   ./fixpoint doctor                        # should say Kane CLI, Claude Code and Chrome are ready
+   ./fixpoint up
+   ```
+   In our real runs, Claude Code's API cost was $0.44 for the cart report and $0.62 for the
+   coupon report, which took two tries. The case file shows the cost of every attempt.
+
 ## For judges
 
 - **Quickest look:** the 30-second steps above. They need no accounts, and every page says the runs are simulated.
